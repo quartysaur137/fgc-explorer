@@ -504,7 +504,7 @@ forward propagation (about 0.1–0.4 s on the full sheet); UB or constant change
 ## 7. User interface (`src/ui`)
 
 * **Header:** the status line (sheet, "built-in sheet" for the embedded one, reductions used, facts, time; in full as
-  a tooltip), the panel toggles, then one segment per thing acted on, its name shown once and short verbs after it:
+  a tooltip), the panel toggles, the light/dark toggle (below), then one segment per thing acted on, its name shown once and short verbs after it:
   **Reductions** (Load… a CSV export of the sheet, Export the edited sheet, ＋ Add a reduction), **Scenario** (Load… /
   Export, JSON), **Config** (Load… / Export, JSON); then **Reset…** (forget the saved state, after a confirmation) and
   **Help**. "Load" replaces; the bounds CSV (left panel) is "imported" because it can also be added to the current
@@ -539,6 +539,12 @@ forward propagation (about 0.1–0.4 s on the full sheet); UB or constant change
   and reductions of its best lower bound's chain, drawn thick in orange, and of its best upper bound's tree, in blue;
   purple where they meet; a bound from a knob on the problem itself marks only the problem; a legend explains the
   colors). Derivation paths come from the analysis (`boundDerivations` in `src/engine/analysis.ts`).
+  *Hover* (`src/ui/hover.ts`): pointing at a problem or reduction in the graph, or at a reference to it in a panel
+  (box names, the inspector's problem names and #IDs, section titles, table rows; also by keyboard focus), highlights
+  it in the graph: an outline (a glow for a reduction) in the text color, drawn undimmed, with a reduction's two
+  problems undimmed too. The view never moves for this; when the element is out of view, a label with its name at the
+  edge of the graph points toward it. Views only mark references (`data-ref-problem` / `data-ref-row` attributes); one
+  listener per panel reports what is pointed at.
   *Layout* (`src/ui/graphLayout.ts`): a force-directed layout of ~200 problems spreads them thin (in the first version
   problems covered about 6 % of the drawing, so labels were about 1 px tall at "fit"). Instead, each family's problems
   are packed in rows inside its box (linked problems next to each other), the boxes and the family-less problems are
@@ -548,6 +554,12 @@ forward propagation (about 0.1–0.4 s on the full sheet); UB or constant change
   canvas; one line reserved for the bounds), so analyses never move anything; editing formulas keeps every position;
   adding problems keeps every unchanged box exactly in place and puts new or grown boxes at the nearest free spot;
   "Re-layout" starts over with a new seed. The family-boxes toggle only shows or hides the boxes.
+* **Light / dark mode** (`src/ui/theme.ts`; a preference): `system` (the default) follows the operating system's
+  setting, also when it changes; `light` and `dark` are explicit. The header's toggle (a moon, pressed in dark mode)
+  always switches to the other look, and stores `system` when the new look is the system's, so it has no state that
+  looks like another one. The CSS defines the dark colors for a dark system unless `data-theme="light"` is on `<html>`,
+  and for `data-theme="dark"`; a small script in the page's head applies a saved choice before anything is drawn (no
+  flash of the other look), and the graph takes up the colors it uses (family titles, highlights) on every change.
 * **Panels** (`src/ui/panels.ts`): the left, right and bottom panels can be resized by dragging the bars between them
   (double-click: default size; arrow keys when focused) and shown or hidden with the buttons at the start of the header
   (the fourth hides all of them, or shows them all again). Default sizes depend on the window (narrower panels on
@@ -610,6 +622,8 @@ src/engine/analysis.ts   scenario + model → Analysis (facts, per-problem summa
 src/engine/explain.ts    per-row probes for the inspector
 src/ui/selection.ts      the selection: items, clicks with Shift / Ctrl / ⌘ (pure)
 src/ui/focus.ts          focus modes: what stays visible around the selection, derivation marks (pure)
+src/ui/hover.ts          references to problems and reductions in panels, the off-view pointer's geometry
+src/ui/theme.ts          light / dark mode: the preference and the toggle (pure)
 src/ui/state.ts, store.ts  AppState, persistence, Store
 src/ui/graphLayout.ts    compact layout of the graph (packing, unit placement, overlap removal; no DOM)
 src/ui/panels.ts         panel sizes and visibility (validation is pure; the Panels class wires the DOM)
@@ -692,6 +706,10 @@ Unit tests (mocha + tsx) partition each module's input space:
   first appearance, write/read round trip (box by box, empty boxes), the sample file being current and reading back as
   exactly the initial scenario, merge of knobs and boxes (replace / add).
 * **display**: `timePlain` (polynomial, exponential with and without a factor, infinite).
+* **hover**: the off-view pointer (in view, partly in view on each side, outside on each side and at a corner,
+  margins larger than the view), reference attributes.
+* **theme**: dark or not and the toggle for each theme × system setting (every toggle changes the look; agreeing with
+  the system means following it); saved themes restored, invalid ones replaced by `system`.
 * **e2e** (Playwright, optional): the built HTML loads without console errors and without any network request, renders
   all problems with their default bounds and the initial-settings note (with switched-off knobs as compact rows), one
   box per problem in the left panel, labels are larger than 3 px at "fit" and grow when the panels are hidden, a knob
@@ -699,7 +717,9 @@ Unit tests (mocha + tsx) partition each module's input space:
   after its verb and segment, the three exports download their files and an exported scenario loads back unchanged,
   a click and a Shift-click select two problems (two inspector sections), the focus modes dim fewer and fewer problems
   (off > ancestors & descendants > neighbours > bound derivations), 3SUM's own knobs make it stand alone in its
-  derivations, the inspector renders a problem (with a derivation) and a reduction, and the help dialog opens.
+  derivations, pointing at a box's name or an inspector #ID highlights that problem or reduction in the graph (and
+  nothing once the pointer leaves), the light/dark toggle changes the page's colors and a second click restores them,
+  the inspector renders a problem (with a derivation) and a reduction, and the help dialog opens.
 
 ---
 
