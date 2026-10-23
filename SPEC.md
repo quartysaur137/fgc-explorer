@@ -18,7 +18,7 @@ what follows for every problem reachable through the reductions, with a derivati
 | G1 | Propagate lower bounds forward (hardness: From → To) and upper bounds backward (algorithms: To → From). | correctness |
 | G2 | Interactive: moving a hypothesis slider recomputes the whole graph in a fraction of a second; changing algorithms or constants in about a second. | usability |
 | G3 | The sheet is the source of truth. Editing or adding rows needs no code change; only machine-only details that the sheet states in prose (e.g. "free integer parameter $k \ge 2$") go into a small JSON config. | RFC |
-| G4 | Every derived exponent has a derivation tree back to the knobs it depends on. | ETU, SFB |
+| G4 | Every derived exponent has a derivation tree back to the knobs it depends on (in the inspector, and drawn in the graph). | ETU, SFB |
 | G5 | One self-contained HTML file that works offline. | usability |
 
 **Non-goals (v1)**
@@ -221,6 +221,7 @@ Free-parameter types:
     { "id": "2", "enabled": true, "problem": "3SUM / 3SUM", "kind": "LB", "regime": "n=1, M=poly", "exponent": 2 },
     { "id": "12", "enabled": true, "problem": "Orthogonal Vectors / OV", "kind": "UB", "formula": "n^2 d" }
   ],
+  "problems": ["Orthogonal Vectors / OV", "3SUM / 3SUM", "String Similarity / Edit Distance"],
   "settings": { "maxHopsLB": 8, "maxDepthUB": 4, "gridPoints": 9, "refineRounds": 20,
                 "unknownRT": "assume-negligible", "useRandomized": true, "disabledRows": [] }
 }
@@ -228,6 +229,12 @@ Free-parameter types:
 
 * `id` is the knob's Bound ID (§3.3): kept as given (a number, or other text), except that a missing or repeated one
   gets the next number after the largest one given (a repeated one is reported).
+* `problems` (optional) orders the left panel's **boxes**, one per problem (`src/model/boxes.ts`): first the listed
+  problems, then those of knobs not listed, in the order of their first knob; each box holds its problem's knobs in
+  their order, and names of one problem (any case or spacing) share a box. A listed problem without knobs is an empty
+  box (in the example, Edit Distance). Blank and repeated entries are dropped. Edits in the panel store the complete
+  order, so a box stays when its last knob is removed; the initial scenario lists nothing (its boxes follow its knobs:
+  first the hypotheses' problems, then the algorithms-only ones).
 * A knob has exactly one of `exponent` (a number, slider in the UI) or `formula` (a LaTeX runtime in the problem's
   parameters and the constants, e.g. `n^{\omega k/3}`).
 * LB knobs need a `regime`; UB knobs without a `regime` apply to every regime (the formula is evaluated there).
@@ -246,7 +253,9 @@ growth := number | number '/' number      polynomial exponent (n=1, m=2, m=4/3)
 
 The knobs can also be kept in a spreadsheet, one bound per row, imported into the left panel and exported from it.
 As for the sheet, columns are found by header name (exact, surrounding spaces ignored; any order; extra columns are
-ignored), the file is comma-separated UTF-8 with standard quoting, and blank rows are skipped.
+ignored), the file is comma-separated UTF-8 with standard quoting, and blank rows are skipped. The boxes (§3.4) follow
+the order in which problems first appear, and a row with neither `Upper or Lower` nor `Runtime` only lists its problem
+(a box without bounds; its other cells are ignored, with a warning if any is filled).
 
 | column | required | meaning |
 |---|---|---|
@@ -263,14 +272,15 @@ Reading never throws: each row's problems are listed with its line number; rows 
 parameters the problem does not have, a lower bound without a regime for an unknown problem) are skipped, and rows
 naming a problem that is not in the current sheet are read with a warning (the knob stays inactive until the problem
 exists). The import dialog shows the counts and these messages before anything changes, and offers **Replace** the
-current knobs or **Add** to them (same Bound ID: replaced in place; others appended). Constants and engine settings are
-not touched.
+current problems and knobs (the boxes become the file's) or **Add** to them (same Bound ID: replaced in place; others
+appended; the file's new problems get boxes after the current ones). Constants and engine settings are not touched.
 
-**Export** writes the current knobs in the same format (formulas in `$...$`, exponents as numbers, all eight columns).
-The initial knobs are numbered 1–33 (their config ids), so exporting right after "Restore initial settings" gives
-exactly `data/initial-bounds.csv`, the sample file (regenerate it with `npm run bounds-sample` after changing
-`initialKnobs`; a test fails while it is out of date). Knobs added in the app also get the next free number, and each
-knob card shows its Bound ID (`#7`).
+**Export** writes the boxes in order, each box's knobs in a row each (an empty box as a row with only its problem), in
+the same format (formulas in `$...$`, exponents as numbers, all eight columns); reading it back gives the same boxes and
+knobs. The initial knobs keep their config ids 1–33, so their rows are grouped by problem rather than sorted by id;
+exporting right after "Restore initial settings" gives exactly `data/initial-bounds.csv`, the sample file (regenerate it
+with `npm run bounds-sample` after changing `initialKnobs`; a test fails while it is out of date). Knobs added in the
+app also get the next free number, and each knob shows its Bound ID (`#7`).
 
 ---
 
@@ -499,18 +509,36 @@ forward propagation (about 0.1–0.4 s on the full sheet); UB or constant change
   Export, JSON), **Config** (Load… / Export, JSON); then **Reset…** (forget the saved state, after a confirmation) and
   **Help**. "Load" replaces; the bounds CSV (left panel) is "imported" because it can also be added to the current
   knobs. The buttons have accessible names that include the segment ("Load reductions sheet").
-* **Left: scenario.** Import… / Export of a bounds CSV (§3.5), in the same segment style as the header. Knobs grouped
-  into hypotheses (LB) and algorithms (UB), starting from the config's `initialKnobs` (§3.3); there are no preset
-  buttons, because hypotheses are adjustable reference points rather than fixed truths (several fell in 2026). Each
-  knob has an on/off checkbox, its problem (variation first, family after), a regime, and a slider + number (any
-  number of decimals) or a formula field (rendered preview while editing); a knob that is off collapses to a one-line
-  summary. Section headers count the knobs that are on. Add-knob form (also prefilled from the inspector). Constants
-  (ω) with sliders. Settings. A link opens the initial-settings note. The panel is rebuilt only when the knob list
-  changes, so typing and dragging never lose focus; switching a knob on or off updates its card in place.
+* **Left: scenario.** Import… / Export of a bounds CSV (§3.5), in the same segment style as the header. Then **one box
+  per problem** (§3.4; there are no preset buttons, because hypotheses are adjustable reference points rather than
+  fixed truths: several fell in 2026). A box's head has a collapse toggle, the problem's name (click: select it,
+  Shift-click: add it to the selection; its box is marked while selected), its bounds at the primary regime colored by
+  status (a count of the knobs that are on while collapsed), ＋ (a form for a new lower bound or algorithm of that
+  problem: kind, regime, exponent or formula; an empty regime means the main one, or every regime for an algorithm's
+  formula) and × (removes the box and its knobs, after asking). Each knob shows an on/off checkbox, LB/UB, its Bound
+  ID, a slider + number (any number of decimals) or a formula field (rendered preview while editing), ×, and below
+  them its regime (an inline field) and note; a knob that is off collapses to a one-line summary and its note. Above
+  the boxes, counts and expand / collapse all; below them, **＋ Problem** (a new empty box with its form open, or the
+  existing box shown). The inspector's "add here" opens a box's form prefilled with a regime. Constants (ω) with
+  sliders. Settings. A link opens the initial-settings note. The panel is rebuilt only when the knobs or boxes change,
+  so typing and dragging never lose focus; switching a knob on or off, new analyses and the selection update it in
+  place.
 * **Center: graph** (Cytoscape). Nodes are problems, optionally boxed by family. Node color = status, label = name +
   `≥ LB ≤ UB` at the primary regime (14 px at 100 % zoom). Edges: solid if the row is `ok`, dashed grey otherwise,
-  orange if it produced a displayed LB, blue if used by a displayed UB, purple if both. Search box, neighbourhood focus,
-  zoom buttons (−, 100 %, +, Fit), re-layout; double-clicking a problem or reduction also shows the inspector.
+  orange if it produced a displayed LB, blue if used by a displayed UB, purple if both. Search box, focus (below), zoom
+  buttons (−, 100 %, +, Fit), re-layout; double-clicking a problem or reduction also shows the inspector.
+  *Selection* (`src/ui/selection.ts`): a list of problems and reductions. A click selects the item alone; Shift-click
+  (or Ctrl/⌘-click) adds it or, if selected, removes it, in the graph, the tables, the inspector's links and the boxes'
+  names; a click on the background clears the selection. Selected problems get a teal border and halo, their reductions
+  teal edges; a problem item also remembers the regime opened in the inspector.
+  *Focus* (`src/ui/focus.ts`; a preference) dims everything except the selection and: **neighbours** (the reductions of
+  selected problems and the problems at their other ends; a selected reduction's two problems); **ancestors &
+  descendants** (every problem with a path of drawn reductions to a selected problem or from it, and the reductions on
+  those paths; for a selected reduction, the ancestors of its source and the descendants of its target); or **bound
+  derivations** (for each selected problem, at the regime opened in the inspector or else the primary one: the problems
+  and reductions of its best lower bound's chain, drawn thick in orange, and of its best upper bound's tree, in blue;
+  purple where they meet; a bound from a knob on the problem itself marks only the problem; a legend explains the
+  colors). Derivation paths come from the analysis (`boundDerivations` in `src/engine/analysis.ts`).
   *Layout* (`src/ui/graphLayout.ts`): a force-directed layout of ~200 problems spreads them thin (in the first version
   problems covered about 6 % of the drawing, so labels were about 1 px tall at "fit"). Instead, each family's problems
   are packed in rows inside its box (linked problems next to each other), the boxes and the family-less problems are
@@ -531,7 +559,10 @@ forward propagation (about 0.1–0.4 s on the full sheet); UB or constant change
   `initialKnobs` with on/off, its description and (expandable) its knobs, and a **Restore initial settings** button
   (replaces knobs, constants and engine settings; sheet edits and pinned regimes are kept).
   *Problem:* signature, regimes of interest with LB/UB/status, derivation trees (LB: chain back to a knob; UB: tree of
-  rows and child UBs), "pin regime", "add knob here".
+  rows and child UBs; the regime opened is the one the "bound derivations" focus draws), "pin regime", "add a lower
+  bound / an algorithm here".
+  *Several items:* a head with their number, expand all / collapse all / clear, then one collapsible section per item
+  (title: name, status and bounds, or the reduction's ends; × removes it from the selection), in the order selected.
   *Reduction:* all sheet fields rendered with KaTeX (MathML output, no fonts needed), parsed formula, status and
   messages, free parameters and abbreviations, the LB facts it produced, a probe of the produced instances (target
   regime and scale of each call, RT exponent) at a chosen source regime, "disable in scenario", and an editor (modal) for
@@ -539,7 +570,7 @@ forward propagation (about 0.1–0.4 s on the full sheet); UB or constant change
   annotation as JSON (live parse checks; the header's Reductions "＋ Add" uses the same form).
 * **Bottom tabs:** problems table (sortable, filtered by the search box), reductions table (status and first message of
   every row, filter for unused rows), diagnostics (knob problems, inconsistencies, caps hit, CSV warnings, model
-  diagnostics such as signature disagreements).
+  diagnostics such as signature disagreements). Selected rows are highlighted; clicks select as in the graph.
 
 State is kept in one immutable `AppState` (`src/ui/state.ts`); every change goes through `Store.update(fn)`
 (`src/ui/store.ts`), which compares the old and new state: a new sheet or config rebuilds the model and the analysis
@@ -568,14 +599,17 @@ src/growth/growth.ts     Growth ADT + algebra (§5)
 src/growth/evaluate.ts   Expr × Env → Growth (with T-call handler and sum handling)
 src/model/regime.ts      Regime ADT, spec parsing, normalization, keys, display
 src/model/config.ts      config + scenario schemas and validators (no dependencies)
-src/model/boundsCsv.ts   bounds CSV ↔ knobs (§3.5)
 src/model/model.ts       rows + config → Model {problems, rows (CompiledRow), diagnostics}
+src/model/boxes.ts       a scenario's problem boxes (left panel; order of the bounds CSV)
+src/model/boundsCsv.ts   bounds CSV ↔ knobs and boxes (§3.5)
 src/engine/freeparams.ts grids and refinement
 src/engine/rowEval.ts    evaluate one row at (regime, θ)
 src/engine/lower.ts      LB propagation
 src/engine/upper.ts      UB recursion
-src/engine/analysis.ts   scenario + model → Analysis (facts, per-problem summaries, statuses)
+src/engine/analysis.ts   scenario + model → Analysis (facts, per-problem summaries, statuses); derivation paths
 src/engine/explain.ts    per-row probes for the inspector
+src/ui/selection.ts      the selection: items, clicks with Shift / Ctrl / ⌘ (pure)
+src/ui/focus.ts          focus modes: what stays visible around the selection, derivation marks (pure)
 src/ui/state.ts, store.ts  AppState, persistence, Store
 src/ui/graphLayout.ts    compact layout of the graph (packing, unit placement, overlap removal; no DOM)
 src/ui/panels.ts         panel sizes and visibility (validation is pure; the Panels class wires the DOM)
@@ -596,7 +630,7 @@ or a diagnostic. Programming errors (violated preconditions) throw `AssertionErr
 | add or edit a reduction | edit the sheet (or use the in-app editor), reload. If the From-time uses a free parameter, add `rows.<id>.free`; abbreviations written as `$X = ...$` in the legend are picked up automatically |
 | add a problem | nothing (signature from To-time). For a source-only problem add `problems.<id>.params`; optionally `regimes` |
 | new constant (e.g. α for rectangular MM) | `constants` in the config; use it in any formula |
-| new hypothesis or algorithm to start with (e.g. a new paper's bounds) | a group in `initialKnobs` in the config (`"enabled": false` to offer it switched off), then `npm run bounds-sample`; in the app, the add-knob form or a bounds CSV (§3.5) |
+| new hypothesis or algorithm to start with (e.g. a new paper's bounds) | a group in `initialKnobs` in the config (`"enabled": false` to offer it switched off), then `npm run bounds-sample`; in the app, ＋ in the problem's box or a bounds CSV (§3.5) |
 | a list of bounds kept elsewhere (spreadsheet) | the bounds CSV (§3.5): Import in the left panel |
 | new LaTeX construct | lexer token + parser rule + `Expr` case + evaluator case + tests |
 | new growth class | `growth.ts` case + operation table + tests; the rest only uses the exported operations |
@@ -629,10 +663,18 @@ Unit tests (mocha + tsx) partition each module's input space:
   $k$-Clique or BMM, and give 3SUM in $n^{1.99915}$ through Exact Triangle (rows 53 and 60).
 * **config / initial scenario**: `initialKnobs` groups (on/off, notes, invalid entries), the old name `presets`,
   `initialScenario` (numbered ids, the config's kept, round trip through the scenario validator), scenario ids (kept,
-  missing or repeated ones numbered).
+  missing or repeated ones numbered), box order (`problems`: kept, blanks and repeats dropped, invalid, missing).
+* **boxes**: order (listed problems, then first knobs), empty boxes, knob order within a box, one box for names of one
+  problem written differently, the box key of known and unknown problems.
+* **derivation paths**: a lower bound back along its chain, an upper bound through its tree (only the best of
+  alternative reductions; several calls), bounds from a knob on the problem itself (the problem alone), missing bounds,
+  unknown problems, a given or unknown regime.
+* **selection and focus**: plain and additive clicks (alone keeping the item's regime; added at the end; removed),
+  modifier keys, regimes of items; neighbours and lineage (ancestors and descendants with cycles and dead ends;
+  selected reductions; unknown reductions), derivations united over the selection.
 * **saved data**: format-2 knob ids become the numbers of the initial knobs (all of the previous sample's 33 ids),
   added and other ids are numbered after them, a taken number is not reused, numeric ids are kept; format 3 is loaded
-  as is.
+  as is; the focus mode is restored when valid; the selection is not saved.
 * **statuses**: conflicts as small as $10^{-4}$, and $n^{2-\Omega(1)}$ against $n^2$, are detected; floating-point noise
   is not a conflict.
 * **display precision** (`boundDecimals`): integers stay short, rounding never overstates a bound (1.99915, ω, 4/3),
@@ -646,14 +688,18 @@ Unit tests (mocha + tsx) partition each module's input space:
 * **panels**: size clamping, validation of saved sizes, window-dependent defaults.
 * **bounds CSV**: column presence and order, extra columns, Upper/Lower synonyms, exponents vs formulas (with `$...$`,
   `\Omega(...)`), regimes (given, invalid, foreign parameters, defaults), unknown and aliased problems, Bound IDs
-  (blank, repeated), Enabled values, row errors and line numbers, write/read round trip, the sample file being current
-  and reading back as exactly the initial scenario, merge (replace / add).
+  (blank, repeated), Enabled values, row errors and line numbers, rows that only list a problem, problems in order of
+  first appearance, write/read round trip (box by box, empty boxes), the sample file being current and reading back as
+  exactly the initial scenario, merge of knobs and boxes (replace / add).
+* **display**: `timePlain` (polynomial, exponential with and without a factor, infinite).
 * **e2e** (Playwright, optional): the built HTML loads without console errors and without any network request, renders
-  all problems with their default bounds and the initial-settings note (with switched-off knobs as compact cards),
-  labels are larger than 3 px at "fit" and grow when the panels are hidden, a knob change through the UI updates the
-  graph, the sample bounds CSV imports, the header's segments name every button after its verb and segment, the
-  three exports download their files and an exported scenario loads back unchanged, the inspector renders a problem
-  (with a derivation) and a reduction, and the help dialog opens.
+  all problems with their default bounds and the initial-settings note (with switched-off knobs as compact rows), one
+  box per problem in the left panel, labels are larger than 3 px at "fit" and grow when the panels are hidden, a knob
+  change through the UI updates the graph, the sample bounds CSV imports, the header's segments name every button
+  after its verb and segment, the three exports download their files and an exported scenario loads back unchanged,
+  a click and a Shift-click select two problems (two inspector sections), the focus modes dim fewer and fewer problems
+  (off > ancestors & descendants > neighbours > bound derivations), 3SUM's own knobs make it stand alone in its
+  derivations, the inspector renders a problem (with a derivation) and a reduction, and the help dialog opens.
 
 ---
 
