@@ -47,7 +47,18 @@ produced instances' parameters) and $RT$ is the **Reduction Runtime** cell. Free
 
 All quantities are functions of a scale $N \to \infty$. Their asymptotic class is a **growth** (§5), e.g.
 $N^{2}$, $\Theta(\log N)$, $\Theta(1)$. The **exponent** of a growth is the $e$ with value $N^{e \pm o(1)}$. Everything
-the tool reports is an exponent, i.e. it ignores $N^{o(1)}$ factors (polylogs, $2^{O(\sqrt{\log n})}$, ...).
+the tool reports is an exponent, i.e. it ignores $N^{o(1)}$ factors (polylogs, $2^{O(\sqrt{\log n})}$, ...), at a
+**power**, which is 1 unless a knob says otherwise:
+
+**Rates.** A running time is given by its **rate** $(a, c)$: power $a$ and exponent $c$, the time
+$2^{(c \pm o(1)) \cdot \ell^{a}}$ with $\ell = \log_2 N$. Power 1 is $N^{c \pm o(1)}$. Other powers describe times
+between those classes: at CNF-SAT's exponential scale $N = 2^n$ (§2.3) the time is $2^{c \cdot n^a}$, subexponential for
+$a < 1$ (e.g. $2^{n^{0.99}}$ or $2^{0.5\,n^{0.75}}$, as in ETH-style hypotheses), and at a polynomial scale
+$2^{c \log^a n}$ is quasi-polynomial for $a > 1$ ($n^{\log n} = 2^{\log^2 n}$) and sub-polynomial for $a < 1$. Rates are
+ordered **power first**: every $2^{c\,n^{0.99}}$ is below every $2^{c' n}$ with $c' > 0$. At power $a$, factors
+$2^{o(\ell^a)}$ are invisible (polylogarithmic ones always are). The **rate zero** (power 0) stands for times below
+every $2^{\ell^a}$, $a > 0$, such as constant and polylogarithmic ones (shown as polylog$(n)$, or poly$(n)$ at an
+exponential scale).
 
 ### 2.3 Regimes
 
@@ -66,10 +77,15 @@ regime for all purposes.
 ### 2.4 Bounds (facts)
 
 * **LB fact** $(P, \rho, L)$: for every $\varepsilon > 0$, $P$ has no algorithm running in time $N^{L-\varepsilon}$ on
-  instances of regime $\rho$.
-* **UB fact** $(P, \rho, U)$: $P$ has an algorithm running in time $N^{U+o(1)}$ on instances of regime $\rho$.
+  instances of regime $\rho$; $L = \infty$: no polynomial-time algorithm (only as the limit of a cycle, §6.9, and what
+  follows from it). At power $a$: no algorithm in time $2^{(L-\varepsilon)\ell^{a}}$ ($L = \infty$: none in time
+  $2^{O(\ell^a)}$).
+* **UB fact** $(P, \rho, U)$: $P$ has an algorithm running in time $N^{U+o(1)}$ on instances of regime $\rho$; at power
+  $a$: in time $2^{(U+o(1))\ell^{a}}$.
 
-Here $N$ is the normalizer of $\rho$ (or $2^{\text{param}}$ for exponential-scale regimes).
+Here $N$ is the normalizer of $\rho$ (or $2^{\text{param}}$ for exponential-scale regimes) and $\ell = \log_2 N$. An LB
+fact has the power of the knob it comes from (reductions keep it, §2.5); an UB fact the power of the term that dominates
+its derivation (the larger power wins, e.g. a reduction taking $2^{n/2}$ to a problem solved in $2^{\sqrt{\log t}}$).
 
 ### 2.5 Propagation rules
 
@@ -90,13 +106,26 @@ gives the LB fact $(Q, \rho', x^*)$ (kept only if $x^* > 0$).
 $N^{\max(g(x), R)}$ with $\max(g(x),R) < L$, contradicting the LB fact. $g$ is nondecreasing because $F$ is monotone in
 $T$ (checked statically, §6.1).
 
+**Powers.** For an LB fact at power $a$, every call is worth $2^{x\,\ell'^{\,a}}$ on its instance, i.e.
+$2^{x (s_c \ell)^{a}}$, and $g_a(x)$ is the exponent of $F$ at power $a$ ($+\infty$ if $F$ then has a larger power, 0 if
+a smaller one); $R$ is compared as a rate, and $x^* = \inf\{x \ge 0 : g_a(x) \ge L\}$ gives the LB fact
+$(Q, \rho', x^*)$ at power $a$. A call keeps the power and scales the exponent by $s_c^{a}$; no other power can come
+out (a call on an instance $N^{s}$ never changes the power). For upper bounds, a call to a target with bound $U$ at
+power $a$ is worth $2^{U (s_c \ell)^{a}}$, and the bound is the rate of $\max(F, RT)$. So a lower bound of power
+$a < 1$ passes only through reductions that themselves take less: CNF-SAT's split-and-list reductions take $2^{n/2}$
+and pass on $2^{c n}$ for $c > 1/2$, but no $2^{c\,n^{0.99}}$; nor does the one to Subset Sum, which takes
+$2^{\varepsilon n}$ for some $\varepsilon > 0$ (only a reduction of subexponential cost would).
+
 **Upper bounds (backward).**
 
 $$UB(P,\rho) = \min\Big(\text{knobs},\ \min_{\text{rows } P \to Q,\ \theta}\ \max\big(g_\theta(UB(Q,\rho'_c)),\ R_\theta\big)\Big)$$
 
 where $g_\theta(\cdot)$ substitutes each call's own target UB. *Soundness:* composing the algorithms.
 
-The best LB for $(Q, \rho')$ is the maximum over all derivations, the best UB the minimum.
+The best LB for $(Q, \rho')$ is the supremum over all derivations, of any length, the best UB the infimum. A supremum
+of valid lower bounds is a valid lower bound, and an infimum of valid upper bounds a valid upper bound in the usual
+sense of exponents (for every $\varepsilon > 0$ an $N^{U+\varepsilon}$ algorithm, as for $\omega$); this is what makes
+the limits of cycles (§6.9) sound.
 
 ### 2.6 Modeling assumptions (stated in the UI)
 
@@ -109,7 +138,14 @@ The best LB for $(Q, \rho')$ is the maximum over all derivations, the best UB th
 * **Constant-size parameters** (e.g. $k$ in $k$-OV, alphabet size $\sigma$) may influence the exponent arbitrarily, so
   their values are part of the regime key (`k=c3`). An unknown constant is `c?`.
 * **Sub-polynomial, non-constant parameters** ($d = \Theta(\log n)$, $d = \text{polylog}(n)$, ...) are one class `L`.
-  So "OV with $d = \Theta(\log n)$" and "$d = \text{polylog}(n)$" are the same regime (the usual convention).
+  So "OV with $d = \Theta(\log n)$" and "$d = \text{polylog}(n)$" are the same regime (the usual convention), and such a
+  parameter is evaluated as the largest member of the class, $(\log N)^{O(1)}$ (so $2^{d}$ has no useful bound there).
+  Earlier versions kept the coefficient of the first $c \log N$ that reached a regime, so a bound could depend on the
+  order of the search and come out too small (found by an independent review of the rates); on the sheet nothing
+  changed. Sizes
+  that are sub-polynomial but not polylogarithmic ($2^{\sqrt{\log n}}$, $n^{o(1)}$, and polynomial exponents that round
+  to 0, §6.7) are the class `S`, evaluated as $N^{o(1)}$ (so a time at a power below 1 never treats them as
+  polylogarithmic).
 * **Sizes are upper bounds.** Arguments of $T$ are upper bounds on the produced instance's parameters; $T$ is assumed
   nondecreasing. Negative exponents in an argument are clamped to a constant.
 * **Unknown reduction runtime.** If the RT cell has no formula, the policy setting decides: *assume negligible* (default;
@@ -219,10 +255,12 @@ Free-parameter types:
   "constants": { "omega": 2.371552 },
   "knobs": [
     { "id": "2", "enabled": true, "problem": "3SUM / 3SUM", "kind": "LB", "regime": "n=1, M=poly", "exponent": 2 },
+    { "id": "1", "enabled": true, "problem": "Boolean Satisfiability / CNF-SAT", "kind": "LB",
+      "regime": "n=log, m=polylog", "exponent": 0.5, "power": 0.75 },
     { "id": "12", "enabled": true, "problem": "Orthogonal Vectors / OV", "kind": "UB", "formula": "n^2 d" }
   ],
   "problems": ["Orthogonal Vectors / OV", "3SUM / 3SUM", "String Similarity / Edit Distance"],
-  "settings": { "maxHopsLB": 8, "maxDepthUB": 4, "gridPoints": 9, "refineRounds": 20,
+  "settings": { "maxDepthUB": 3, "gridPoints": 9, "refineRounds": 20,
                 "unknownRT": "assume-negligible", "useRandomized": true, "disabledRows": [] }
 }
 ```
@@ -236,8 +274,17 @@ Free-parameter types:
   order, so a box stays when its last knob is removed; the initial scenario lists nothing (its boxes follow its knobs:
   first the hypotheses' problems, then the algorithms-only ones).
 * A knob has exactly one of `exponent` (a number, slider in the UI) or `formula` (a LaTeX runtime in the problem's
-  parameters and the constants, e.g. `n^{\omega k/3}`).
+  parameters and the constants, e.g. `n^{\omega k/3}`). An exponent may come with a `power` $a > 0$ (default 1; §2.2):
+  the time $2^{c\,\ell^a}$, i.e. $2^{c\,n^a}$ for CNF-SAT (in the example, $2^{0.5\,n^{0.75}}$). A formula has its own
+  rate (`2^{0.5 n^{0.75}} \cdot m` is power 0.75, exponent 0.5; `n^{\log n}` power 2), so `power` goes only with an
+  exponent.
 * LB knobs need a `regime`; UB knobs without a `regime` apply to every regime (the formula is evaluated there).
+* `settings`: `maxDepthUB` (0–12, default 3; "UB detours" in the app) bounds how many regimes in a row that are not of
+  interest an upper-bound derivation passes through (§6.6); derivations have no other length limit. `gridPoints` and
+  `refineRounds` control the free-parameter search (§6.3), `unknownRT` the policy for rows without a Reduction Runtime
+  formula (§2.6), `useRandomized` and `disabledRows` which rows are used. Earlier versions also had `maxHopsLB`, a
+  length limit for lower-bound derivations: it is ignored. (Before format 4 of the saved data, `maxDepthUB` limited
+  the length of whole upper-bound derivations, with default 4.)
 * Regime specs: `param=growth` pairs. Parameters not mentioned take the problem's first configured regime, else the
   defaults (`M=poly`, everything else `1`).
 
@@ -245,6 +292,7 @@ Free-parameter types:
 growth := number | number '/' number      polynomial exponent (n=1, m=2, m=4/3)
         | 'log' [':' number]              c·log2 N (default c = 1)
         | 'polylog'                       non-constant, (log N)^{O(1)}
+        | 'subpoly'                       sub-polynomial, N^{o(1)}, not polylogarithmic (class S, §2.6)
         | 'const' [':' value-or-list]     constant; a list (const:[3,4,5]) expands into one regime per value
         | 'poly'                          log-dependent parameter, polynomial (evaluated at N^3, §2.6)
 ```
@@ -262,7 +310,8 @@ the order in which problems first appear, and a row with neither `Upper or Lower
 | `Problem`, `Variation` | yes | the problem (family and variation; case-insensitive, config aliases apply) |
 | `Bound ID` | yes | the knob's id, a number like the sheet's Reduction IDs (other text is accepted): an import in "add" mode replaces the knob with the same id. A blank or repeated one gets the next free number after all numbers in the file and in the current knobs (warning) |
 | `Upper or Lower` | yes | `Upper` (algorithm) or `Lower` (hypothesis); also `UB`/`LB`, `upper bound`/`lower bound`, `algorithm`/`hypothesis`, any case |
-| `Runtime` | yes | a plain number is an **exponent** of the regime's main parameter N (a slider; e.g. `2`, or `1` for CNF-SAT, whose N is $2^n$); anything else is a LaTeX runtime in the problem's parameters and the constants, with or without `$...$` (`n^2 d`, `2^n \cdot m`, `\min(n^{\omega}, m^{2\omega/(\omega+1)})`). A lower bound may be written `\Omega(...)` or `n^{2-o(1)}` |
+| `Runtime` | yes | a plain number is an **exponent** of the regime's main parameter N (a slider; e.g. `2`, or `1` for CNF-SAT, whose N is $2^n$); anything else is a LaTeX runtime in the problem's parameters and the constants, with or without `$...$` (`n^2 d`, `2^n \cdot m`, `\min(n^{\omega}, m^{2\omega/(\omega+1)})`, `2^{0.5 n^{0.75}}`). A lower bound may be written `\Omega(...)` or `n^{2-o(1)}` |
+| `Power` | no | with a plain number in `Runtime`: its power $a$ (§2.2; empty: 1), e.g. `0.75` with `0.5` for $2^{0.5\,n^{0.75}}$; an error with a formula |
 | `Regime` | no | a regime spec (§3.4). Empty: the problem's main regime, except that an upper bound given as a formula applies to every regime |
 | `Enabled` | no | `yes`/`no` (also `y`/`n`, `true`/`false`, `on`/`off`, `1`/`0`); empty: yes |
 | `Note` | no | shown under the knob |
@@ -276,11 +325,12 @@ current problems and knobs (the boxes become the file's) or **Add** to them (sam
 appended; the file's new problems get boxes after the current ones). Constants and engine settings are not touched.
 
 **Export** writes the boxes in order, each box's knobs in a row each (an empty box as a row with only its problem), in
-the same format (formulas in `$...$`, exponents as numbers, all eight columns); reading it back gives the same boxes and
-knobs. The initial knobs keep their config ids 1–33, so their rows are grouped by problem rather than sorted by id;
-exporting right after "Restore initial settings" gives exactly `data/initial-bounds.csv`, the sample file (regenerate it
-with `npm run bounds-sample` after changing `initialKnobs`; a test fails while it is out of date). Knobs added in the
-app also get the next free number, and each knob shows its Bound ID (`#7`).
+the same format (formulas in `$...$`, exponents as numbers, all eight columns, and `Power` after `Runtime` when a knob
+has a power other than 1); reading it back gives the same boxes and knobs. The initial knobs keep their config ids 1–33,
+so their rows are grouped by problem rather than sorted by id; exporting right after "Restore initial settings" gives
+exactly `data/initial-bounds.csv`, the sample file (regenerate it with `npm run bounds-sample` after changing
+`initialKnobs`; a test fails while it is out of date). Knobs added in the app also get the next free number, and each
+knob shows its Bound ID (`#7`).
 
 ---
 
@@ -313,9 +363,9 @@ delimiters. Anything else is a parse error with a position (shown in the Diagnos
 
 | construct | meaning |
 |---|---|
-| `O(x)`, `O_k(x)`, `\Theta(x)` | the growth of `x` up to a constant factor: invisible for polynomial growths, but `O(c)` is an *unknown* constant (so `n^{O(1)}` has an unknown exponent and `2^{O(k)}` is a constant) and `O(\log n)` has an unknown coefficient (so `2^{O(\log n)}` has an unknown exponent) |
+| `O(x)`, `O_k(x)`, `\Theta(x)` | the growth of `x` up to a constant factor: invisible for polynomial growths, but `O(c)` is an *unknown* constant (so `n^{O(1)}` has an unknown exponent and `2^{O(k)}` is a constant) and `O(\log n)` has an unknown coefficient (so `2^{O(\log n)}` has an unknown exponent); so has `O(n^{0.5})` at CNF-SAT's scale (`2^{O(\sqrt{n})}` is only $2^{o(n)}$) |
 | `\tilde{O}(x)` | `x` times a polylogarithmic factor |
-| `o(1)` | the constant 0 (only meaningful in exponents: `n^{1+o(1)}`); `O(0)` is also 0 (e.g. `O(\gamma)` with $\gamma \to 0$) |
+| `o(x)` | $10^{-12} \cdot x$ for a constant or logarithmic `x`, an infinitesimal that exponents do not notice: `n^{1+o(1)}` is $N^{1}$, while `n^{o(1)}` is $N^{o(1)}$ and, at CNF-SAT's scale, `2^{o(n)}` is $2^{o(n)}$ and `2^{o(n^{0.75})}` is $2^{o(n^{0.75})}$ (rate $(0.75, 0)$); other arguments are an error. (Before rates, `o(1)` was the constant 0, which made `n^{o(1)}` a constant.) `O(0)` is 0 (e.g. `O(\gamma)` with $\gamma \to 0$) |
 | `\Omega(1)` | a small positive constant ($10^{-6}$, larger than the engine's comparison and conflict tolerances), e.g. `n^{2-\Omega(1)}` |
 | `\omega(...)` | an error: little-omega is not supported, and the constant ω times something must be written `\omega \cdot (...)` |
 | `T(...)`, `T_p(...)` | oracle call of the target's time function |
@@ -336,34 +386,46 @@ Single letters, Greek letters (`\delta` → `delta`, `\varepsilon` → `epsilon`
 **Abstraction function.** A `Growth` denotes a set of positive functions of $N$; operations return a growth that
 contains every possible result (upper-bound semantics), so evaluation of an $O(\cdot)$ formula is sound.
 
-| kind | denotes | exponent |
-|---|---|---|
-| `const(v)` | $\Theta(1)$; `v` the value if known (`null`: unknown constant) | 0 |
-| `log(p, c)` | $\Theta((\log N)^p)$, $p \in [0,\infty]$; $p=0$: $(\log N)^{o(1)}$ but $\omega(1)$ ($\log\log N$, $\alpha(N)$); $p=\infty$: $N^{o(1)}$ but $\omega(\text{polylog})$; `c` = coefficient of $\log_2 N$ when $p = 1$ (may be negative: used only as an exponent of 2) | 0 |
-| `poly(e)` | $N^{e\pm o(1)}$, $e \ne 0$ | $e$ |
-| `polyUnknown` | $N^{\Theta(1)}$ with unknown exponent (from `n^{O(1)}`, `\text{poly}(n)`) | error |
-| `super` | $N^{\omega(1)}$ | $+\infty$ |
+With $\ell = \log_2 N$:
 
-**Rep invariant.** `poly.e` finite and $\ne 0$; `log.p` in $[0, \infty]$; `log.c` is `null` unless `p == 1`;
-negative `c` only if `p == 1`; `const.v` finite if non-null. Checked by every constructor (error messages are only built
-on failure, because growths are created in the inner loops).
+| kind | denotes | exponent | rate (§2.2) |
+|---|---|---|---|
+| `const(v)` | $\Theta(1)$; `v` the value if known (`null`: unknown constant) | 0 | zero |
+| `log(p, c)` | $\Theta(\ell^p)$, $p \in [0,\infty]$; $p=0$: $\ell^{o(1)}$ but $\omega(1)$ ($\log\log N$, $\alpha(N)$); $p=\infty$ (`POLYLOG`): of rate zero, of unknown, at least polylogarithmic, order (`\text{polylog}(n)`, `\log^{O(1)} n`, $2^{\ell^{o(1)}}$); `c`: the value is $c\,\ell^p$, when known and $0 < p < \infty$ (may be negative: used only as an exponent of 2) | 0 | zero |
+| `qpoly(a, c)` | $2^{(c \pm o(1))\,\ell^{a}}$, $a > 0$, $c \ge 0$ ($c = 0$: $2^{o(\ell^a)}$); for $a = 1$ only $c = 0$: $N^{o(1)}$ (`SUBPOLY`) | 0 if $a \le 1$, else $+\infty$ | $(a, c)$ |
+| `poly(e)` | $N^{e\pm o(1)}$, $e \ne 0$ | $e$ | $(1, e)$; zero if $e < 0$ |
+| `polyUnknown` | $N^{\Theta(1)}$ with unknown exponent (from `n^{O(1)}`, `\text{poly}(n)`) | error | error |
+| `super` | $N^{\omega(1)}$ without useful bound ($2^N$, $2^{2^{n}}$) | $+\infty$ | none |
+
+**Rep invariant.** `poly.e` finite and $\ne 0$; `log.p` in $[0, \infty]$; `log.c` is `null` unless $0 < p < \infty$,
+and nonzero; `qpoly.a` finite and $> 0$, `qpoly.c` finite and $\ge 0$, and 0 if $a = 1$; `const.v` finite if non-null.
+Powers within $10^{-9}$ of 1 are 1. Checked by every constructor (error messages are only built on failure, because
+growths are created in the inner loops). (Until this version `log(∞)` stood for $N^{o(1)}$ and coefficients were kept
+only for $p = 1$: at a power below 1, $N^{o(1)}$ and polylogarithmic factors are no longer the same.)
 
 **Operations** (each total; errors are thrown, never silently mapped to 0):
 
 | op | rule (summary) |
 |---|---|
-| `add(a,b)`, `max` | exact on two constants and on two $\Theta(\log N)$ quantities with known coefficients; otherwise the larger in the order (negative log quantity) < (negative constant) < 0 < poly(<0) < positive const < log (by p) < poly(>0) (by e) < super; `polyUnknown` absorbs anything ≤ poly |
+| `add(a,b)`, `max` | exact on two constants and on two $c\,\ell^p$ quantities with the same $p$ and known coefficients; otherwise the larger in the order (negative log quantity, larger $p$ lower) < (negative constant) < 0 < poly(<0) < positive const < log (by p) < [`qpoly`, `poly(>0)` by rate: power first, then coefficient] < super; `polyUnknown` is above the classes of power < 1 and $N^{o(1)}$, below those of power > 1, and incomparable with `poly(>0)` (the result is then `polyUnknown`) |
 | `min` | the smaller; `min(poly(e), polyUnknown) = poly(e)` |
 | `sub(a,b)` | `a` if `b` is strictly smaller; consts and log coefficients subtract exactly; equal-order `poly` stays (assumes the difference is still $\Theta(a)$); `b > a` is an error |
-| `mul` | exponents add (a sum of 0 gives `log(∞)`, i.e. $N^{o(1)}$); log powers add; constants multiply coefficients |
-| `inv` | `poly(e) → poly(-e)`; `const(v) → const(1/v)`; `log → const(null)` (an $o(1)$ quantity is bounded by a constant) |
-| `pow(a, k)` (k a known constant) | `poly(e·k)`, `log(p·k)`, `const(v^k)` |
-| `pow(a, k)` (k unknown constant) | `poly → polyUnknown`, `log → log(p unknown)`, `const → const(null)` |
-| `exp2(x)` | `const(v) → const(2^v)`; `log(1, c) → poly(c)`; `log(1, null) → polyUnknown`; `log(p<1) → log(∞)`; `log(p>1) → super`; `poly(e>0) → super`; `poly(e<0) → const` |
-| `b^x` (b a known positive constant) | `exp2(x · log2 b)` (e.g. `4^i`, `(1/4+\gamma)^i`) |
-| `log2(x)` | `poly(e) → log(1, e)`; `log(p) → log(0)`; `const(v) → const(log2 v)`; `polyUnknown → log(1, null)` |
+| `mul` | exponents add (a sum of 0 gives $N^{o(1)}$); log powers add and coefficients multiply; `qpoly` of one power add coefficients, else the larger power wins; a power above 1 absorbs every polynomial factor (also `polyUnknown`), a power up to 1 is absorbed by any polynomial; rate-zero factors (constants, log classes) leave `qpoly` unchanged; constants multiply coefficients |
+| `inv` | `poly(e) → poly(-e)`; `const(v) → const(1/v)`; `log`, `qpoly → const(null)` (an $o(1)$ quantity is bounded by a constant) |
+| `pow(a, k)` (k a known constant) | `poly(e·k)`, `log(p·k, c^k)`, `qpoly(a, c·k)`, `const(v^k)` |
+| `pow(a, k)` (k unknown constant) | `poly → polyUnknown`, `log → log(∞)`, `qpoly(a ≤ 1) → ` $N^{o(1)}$, `qpoly(a > 1) → super`, `const → const(null)` |
+| `exp2(x)` | `const(v) → const(2^v)`; `log(1, c) → poly(c)`; `log(1, null) → polyUnknown`; `log(p, c) → qpoly(p, c)` for $p \ne 1$ and a known $c > 0$ ($c < 0$: `const(null)`); `log(p<1, null)` → $N^{o(1)}$; `log(p>1, null)`, `log(∞) → super`; `log(0) → log(∞)`; `poly(e>0)`, `qpoly → super`; `poly(e<0) → const` |
+| `b^x` (b a known positive constant) | `exp2(x · log2 b)` (e.g. `4^i`, `(1/4+\gamma)^i`, $3^{\sqrt{n}}$); a polynomial base $N^e$ with an exponent $c\,\ell^p$: `qpoly(p+1, e·c)` ($n^{\log n} = 2^{\log^2 n}$) |
+| `log2(x)` | `poly(e) → log(1, e)`; `qpoly(a, c) → log(a, c)` (`c` null if 0); `log(p) → log(0)`; `const(v) → const(log2 v)`; `polyUnknown → log(1, null)` |
 | `ceil`, `floor`, `binom` | exact on known constants; $\lceil N^{-e} \rceil = 1$, $\lfloor N^{-e} \rfloor = 0$; otherwise identity / `a^b` |
 | overflow | a constant that is not finite (e.g. `10^{400}`) is an EvalError, not a value |
+
+**Rates** (also in `growth.ts`): `rateOf(g)` is the rate of a time of class `g` (table above; an EvalError for
+`polyUnknown`); `rateGrowth(r, s)` the class of a time of rate `r` on an instance of size $N^s$, i.e.
+$2^{c (s\ell)^a}$ (`poly(c·s)` for power 1, `log(∞)` for the rate zero, `super` for none); `compareRates` orders
+rates power first (powers equal within $10^{-9}$), then by exponent within a tolerance; `exponentAtPower(g, a)` is the
+exponent of `g` at power `a` (+∞ above, 0 below; `exponentOf` for power 1), which the lower-bound threshold of §2.5
+uses.
 
 ---
 
@@ -392,15 +454,18 @@ These checks run once at load, not during propagation, so propagation code can a
 ### 6.2 Row evaluation (`src/engine/rowEval.ts`)
 
 `prepareRow(model, row, sourceRegime, θ, constants)` builds the environment (constants, source parameters ↦ regime
-growths, free parameters, then abbreviations in dependency order), evaluates the RT exponent (or `null` = unknown), and
+growths, free parameters, then abbreviations in dependency order), evaluates the RT's rate (or `null` = unknown), and
 chooses the first From-time alternative that evaluates. `evaluateF(prepared, value, onSite)` then evaluates the From-time
 with every oracle call valued by `value(targetRegime, scale)` (the caller decides: $N^{s x}$ for the LB threshold
 search, the target's UB for upper bounds) and reports each call site (target regime and scale) to `onSite`.
 Normalizations of call arguments are cached per prepared row, since threshold searches re-evaluate the same calls.
 
-A call is **degenerate** when no argument can be a normalizer (all constant or polylog). Its value is $N^{o(1)}$ if the
-target has `timeType: "poly"`, and the evaluation fails otherwise (an exponential-time target on a polylog-size instance
-may be superpolynomial).
+A call is **degenerate** when no argument can be a normalizer (all constant or polylog). Its value is polylogarithmic
+(rate zero; $N^{o(1)}$ if an argument is sub-polynomial but not polylogarithmic) if the target has `timeType: "poly"`,
+and the evaluation fails otherwise (an exponential-time target on a polylog-size instance may be superpolynomial).
+This assumes what `timeType: "poly"` says: the target is solvable in polynomial time (a quasi-polynomial algorithm for
+it, e.g. a knob $n^{\log n}$, is then just a weak upper bound; a quasi-polynomial lower bound contradicts the
+assumption).
 
 ### 6.3 Free parameters (`src/engine/freeparams.ts`)
 
@@ -427,8 +492,10 @@ therefore only weaken bounds, never produce a conflict; §6.7 relies on this.
 `\sum_{i=a}^{b} f(i)`:
 * `b` a known constant ≤ 64: exact sum over integers.
 * `b` of class $\Theta(\log N)$ (known coefficient $c$, or unknown, which uses $c_{\max} = 8$): with $i = \theta\log_2 N$,
-  the sum has $O(\log N)$ terms, so its exponent is $\max_{\theta \in [0, c]}$ of the term's exponent (grid of
-  `gridPoints` values, endpoints included, then 30 halving rounds of local search, i.e. $\theta$ to about $2^{-30}c$).
+  the sum has $O(\log N)$ terms, so its class is that of its largest term (times $\log N$): by exponent and, among terms
+  of exponent 0, by rate (e.g. $2^{\sqrt{i}}$); terms of a power above 1 by rate. The largest is found over
+  $\theta \in [0, c]$ (grid of `gridPoints` values, endpoints included, then 30 halving rounds of local search, i.e.
+  $\theta$ to about $2^{-30}c$).
   This sampled maximum is the one search that may err on the unsafe side (an underestimate), which is why it is made
   far more precise than the conflict tolerance of §6.7.
   With an unknown coefficient the evaluation fails if the term is still growing at $c_{\max}$.
@@ -439,38 +506,124 @@ therefore only weaken bounds, never produce a conflict; §6.7 relies on this.
 ```
 facts := best LB per (problem, key);  queue := instantiated LB knobs (hops = 0)
 while queue not empty and pops < 20 000:
-  f := pop (FIFO);  skip if superseded or f.hops = maxHopsLB
+  f := pop (FIFO);  skip if superseded
   for each ok row r with source f.problem:
     for each grid point θ (+ refinement per key):
-      evaluate r at (f.regime, θ); require one shared non-degenerate target key and R < f.L
-      x* := smallest x in [0, X] with g(x) ≥ f.L − 1e-9, X = max(64, 2(L+1)/s_min)
+      evaluate r at (f.regime, θ); require one shared non-degenerate target key and R < f's rate
+      x* := smallest x in [0, X] with g_a(x) ≥ f.L − 1e-9 at f's power a, X = max(64, 2(L+1)/s_min^a)
             (Illinois regula falsi with interleaved bisection, to 1e-9; s_min = smallest call scale)
       if g(X) < f.L: record an inconsistency (P solvable below its LB whatever Q costs)
-    for each key: if x* > current + 1e-9: store fact (provenance: row, θ, parent f), enqueue
+    for each key: if better(x*, f.hops + 1) than the current fact:
+      if the new fact came back around a cycle to its own problem and key, raising the bound it started from:
+        replace it by the limit of repeating that cycle (§6.9)
+      store fact (provenance: row, θ, parent f), enqueue
 ```
 
-Termination: each fact is popped at most once per improvement; improvements are > 1e-9 and capped. Facts per problem are
-capped at 400 keys (warning shown).
+There is no limit on the length of derivations: propagation runs until nothing improves. (Earlier versions stopped
+chains after `maxHopsLB` = 8 reductions; on the sheet the longest best chain has 5, but a limit makes a problem's bound
+depend on how far it is from the hypotheses.) *Better* means a larger rate (a larger power, or the same power and a
+larger exponent), or one equal within 1e-9 reached with fewer hops (reductions): among derivations of the same bound the
+shortest is kept, so a chain never takes a detour (the FIFO order mostly finds the shortest first; the rule also covers
+facts that improve later). Termination: each fact is popped at most once per improvement; an improvement raises the
+exponent by more than 1e-9 or lowers the hops, and a cycle that would raise a bound again and again is replaced by its
+limit (at most 8 times per key; the 20 000 steps cap everything else). Facts per problem are capped at 400 keys (warning
+shown).
+
+An infinite lower bound (the limit of a cycle without fixed point) transfers like any other: through a row whose calls
+land in one regime and whose From-time grows without limit with the calls' cost, the target needs superpolynomial time
+too ($x^* = \infty$); a row that would solve the source in polynomial time without such calls is an inconsistency.
+
+Facts keep the power of their knob (§2.5), and one fact per (problem, key) is kept, the best: a fact of a larger power
+passes through every reduction a smaller one passes through (a reduction's own time below the smaller is below the
+larger) and gives at least as much, so nothing is lost. With SETH as $2^{0.5\,n^{0.75}}$, CNF-SAT and MAX-CNF-SAT
+(identity, row 284) keep it, and nothing else follows: the split-and-list reductions (to OV, $k$-OV, …) take $2^{n/2}$,
+and the one to Subset Sum (row 256) takes $2^{\varepsilon n}$ for a free $\varepsilon > 0$. Its range in the config is
+$[10^{-9}, 1]$: at $\varepsilon = 0$, which an earlier config allowed, the reduction does not exist, yet its own time
+would have been polynomial and passed such bounds on (an independent review caught this; at power 1 the bounds are
+continuous in $\varepsilon$ and the endpoint only gave their limit). A free parameter whose range excludes an endpoint
+must say so in the config (here by a tiny positive minimum).
 
 ### 6.6 Upper-bound evaluation (`src/engine/upper.ts`)
 
-`ub(P, ρ, depth)` is a memoized recursion (memo key: problem, regime key, depth) implementing §2.5 with `depth` hops at
-most (`maxDepthUB`, default 4). Depth strictly decreases, so the recursion terminates even on cyclic graphs, and the
-result for a key is a pure function of the knobs (independent of query order). UB knobs are evaluated by substituting the
-regime's growths into the knob formula. *Branch and bound* keeps it fast without changing any result: a candidate
-(row, θ) is skipped when its reduction runtime, or its From-time with every call worth $N^0$, already reaches the best
-bound found so far. (Derivations may need no knob at all: e.g. row 103 with $t = n$ solves Mono Convolution by FFT and
-only calls 3SUM on constant-size instances.)
+Every (problem, regime) met is a **node** with a single best upper bound: the best over all derivations, of any
+length, from the knobs through the reductions (§2.5). So a problem's bound is the same wherever it is used, in its own
+box or inside the derivation of another problem, and a problem gets every bound its reductions give, however many
+reductions away the algorithm is. (Until this version, a depth-limited recursion valued a call with the bound of its
+target found within one reduction fewer: with the 2026 3SUM algorithm, 0-1 Knapsack showed $n^{1.9996}$ but Unbounded
+Knapsack, which reduces to it at no cost, stayed at $n^2$, and Superadditivity Testing, six reductions from 3SUM, had
+none.)
+
+The bounds are the fixpoint of "a node's bound is the best of its knobs and of each reduction from it, with its calls
+valued at the bounds of their targets", computed on demand by Seidl's **top-down solver**: solving a node evaluates
+its knobs and candidates, solving the nodes their calls reach (recursively; nesting deeper than 120 is postponed to a
+list solved before the query returns, so the call stack stays small) and recording which nodes read which; when a
+node's bound improves, the nodes that read it are solved again. Cycles of reductions need nothing special: a node in
+progress reads as its current bound (its best knob, set before any reduction is tried; nodes that read it earlier,
+e.g. while it was postponed, are solved again), and is solved again if that changes. Values start at "no bound" and
+only improve, so the fixpoint reached is the same whatever the order (the order only decides between derivations that
+are equal in exponent and reductions).
+
+A node's **candidates** are the usable rows from its problem whose `requires` hold, at each grid point θ, prepared
+once (with their target regimes and the *optimistic* value: the rate of max(RT, From-time with every call of rate
+zero)). They are
+tried in order of their optimistic values (rows by their best candidate, then sheet order; the knobs first), each row
+followed by the refinement of its free parameters when at least two grid points call the same target regimes;
+refinement only moves within those regimes, whose bounds are known, so it creates no nodes (and compares only points
+of the same power). Of the results, the best is kept: the smallest rate (power first, then exponent), and among those
+equal within 1e-9 the one with the fewest reductions in its
+derivation tree (`steps`: 0 for a knob, 1 + the steps of the bounds its calls use). Without this tie-break the first
+candidate found was kept, which could be a detour (Diameter's bound came through Reach Centrality and back to Diameter
+instead of directly from APSP). *Branch and bound*: a candidate whose optimistic value cannot beat the node's bound
+(above it, or equal while that bound needs at most one reduction) is dropped for good, since bounds only improve; this
+keeps the search to the part of the graph that matters.
+
+**Regimes of interest and detours.** Free parameters make the number of regimes grow quickly (about 200 000 within
+seven reductions of the initial regimes). The search therefore follows reductions without limit from the regimes of
+interest (the configured regimes, the regimes of UB knobs, pinned regimes, and any regime asked for) but passes
+through at most `maxDepthUB` (default 3) regimes in a row that are not of interest; at the next such regime only its
+knobs count. At a regime that is not of interest, the remaining budget is part of the node's identity (`maxDepthUB`
+below a regime of interest, one less at each further one; up to `maxDepthUB` + 1 nodes per regime), so every node's
+bound is a pure function of its identity, the knobs and the settings: the same whatever the order of the rows or of
+the queries, and final once solved. (A first version raised a node's budget when a later caller offered more, which
+made bounds depend on the order of the search.) On the sheet, 2 is enough for every displayed bound (with 1, 25 bounds
+at lower-bound regimes of Triangle Listing and Set Intersection are lost); 2 to 5 give the same results, in about 0.9,
+1.3, 1.7 and 6 s. The solver depends only on the UB knobs, the constants, the settings and the regimes of interest, so
+it survives every change of lower bounds (moving an LB slider takes 0.1–0.4 s). Bounds at other regimes (those of
+lower bounds, §6.7, and regimes opened in the inspector) come from an **overlay**: a solver of its own that searches
+them as regimes of interest and reads the nodes of the analysis's solver (final, since they are pure) without changing
+them, so asking for them never changes a bound shown elsewhere. Its nodes are pure as well, so one overlay serves
+every analysis that reuses the solver (a new one starts beyond 20 000 nodes). Where the budget matters, a regime of a
+lower bound shown with its full search can have a better bound than the budget-limited node of that regime inside
+another problem's derivation; the inspector then notes the better one ("its best: …"); on the sheet this does not
+happen with the default budget. Nodes beyond 60 000 are not searched (a message says so; never reached on the sheet:
+about 3 600 nodes).
+
+UB knobs are evaluated by substituting the regime's growths into the knob formula (its rate: `2^{0.5 n^{0.75}} \cdot m`
+at CNF-SAT's regime is power 0.75, exponent 0.5); an exponent knob has the power it is given. Derivations may need no
+knob at all: e.g. row 103 with $t = n$ solves Mono Convolution by FFT and only calls 3SUM on constant-size instances.
+Each call uses its own best derivation; a call whose term does not determine the result could in principle have a
+shorter derivation with a slightly worse bound that leaves the result unchanged, which is not searched for. When a
+node's bound improves after another node read it, without changing the other node's bound, the other node's derivation
+keeps the earlier bound; the inspector notes the better one ("its best: …"; on the sheet this does not happen).
 
 ### 6.7 Keys, regimes of interest, status
 
-Key encoding per parameter: `p<e>` (polynomial exponent, rounded to 1e-6), `E` (the exponential-scale normalizer),
-`L` (non-constant sub-polynomial), `c<v>` / `c?` (constant), and for log-dependent parameters only the class
-`C`/`L`/`P`/`X`.
+Key encoding per parameter: `p<e>` (polynomial exponent, rounded to 1e-6), `E` (the exponential-scale normalizer), `L`
+(non-constant polylogarithmic, or of rate zero; evaluated as $(\log N)^{O(1)}$, §2.6), `S` (sub-polynomial but not
+polylogarithmic: $N^{o(1)}$, e.g.
+$2^{\sqrt{\log n}}$, or an exponent that rounds to 0), `c<v>` / `c?` (constant), and for log-dependent parameters only
+the class `C`/`L`/`P`/`X`. (Before `S`, a free parameter of row 303 refined to $d = N^{4.8\cdot 10^{-7}}$ landed in the
+`L` regime of All-Edges Monochromatic Triangle and gave APSP with real weights an upper bound $4.8 \cdot 10^{-7}$ below
+$1 + \omega$: a rounding artifact; it is now exactly $1 + \omega$.) Regimes are stored with their growths rounded the
+same way, and a log-dependent constant as one unknown constant, so that a key stands for exactly one regime: otherwise
+which of several regimes with one key is stored, and what follows from it, would depend on the order of the search (on
+the sheet, refinement produced 111 keys with growths differing below $10^{-6}$; rounding changed no status).
 
-For each problem, the **regimes of interest** are its configured regimes, the regimes of its LB facts and of its knobs,
-and regimes pinned in the inspector. The UB is computed at each of them, except at LB regimes beyond the first 12 per
+For each problem, the **regimes shown** are its configured regimes, the regimes of its LB facts and of its knobs, and
+regimes pinned in the inspector. The UB is computed at each of them, except at LB regimes beyond the first 12 per
 problem (fewest hops first; some trade-off rows produce hundreds): those are computed when opened in the inspector.
+The upper-bound search starts from the configured, pinned and UB-knob regimes (§6.6); the others (of lower bounds or
+of their knobs only) get their upper bounds from the overlay.
 Per regime:
 
 | status | condition |
@@ -480,6 +633,10 @@ Per regime:
 | gap | UB > LB + 10⁻⁴ |
 | LB only / UB only / none | |
 
+The exponents are compared when both bounds have the same power; otherwise the powers decide: conflict if the UB's is
+smaller (an algorithm in $2^{n^{0.99}}$ against SETH), gap if it is larger (SETH as $2^{0.5\,n^{0.75}}$ against the
+$2^n$ algorithm).
+
 The tolerances are asymmetric because the searches are one-sided (§6.3): an UB below an LB cannot come from search
 error, so the conflict tolerance only absorbs floating-point noise (about $10^{-8}$), and improvements as small as those
 of the 2026 algorithms (3SUM in $n^{1.9992}$ against the 3SUM hypothesis, APSP in $n^{2.9995}$), or an
@@ -487,6 +644,9 @@ $n^{2-\Omega(1)}$ bound (§4.2), show up as conflicts. The tight tolerance absor
 first version used $10^{-3}$ for both, which hid those conflicts.) Exponents are displayed with the fewest decimals, from four to eight, such that rounding never overstates a
 bound by more than $10^{-6}$ (an upper bound is never shown smaller, a lower bound never larger) and a conflict or gap
 never looks like equality: 3SUM through Exact Triangle shows as $n^{1.99915}$, not $n^{1.9991}$; integers stay short.
+Times of other powers show as $2^{0.5\,n^{0.75}}$ (exponential scale), $2^{0.5 \log^{0.75} n}$ (polynomial scale),
+$2^{o(n)}$ / $n^{o(1)}$ (exponent 0), $2^{\omega(n^{0.75})}$ (an infinite lower bound), and the rate zero as
+poly$(n)$ / polylog$(n)$.
 
 A node's color is its most severe status over all its regimes (conflict > tight > gap > LB only > UB only > none). Its
 label shows the LB and UB at its **primary regime**: the pinned one if any, else the regime of that most severe status,
@@ -495,9 +655,68 @@ preferring fewer hops.
 ### 6.8 Recomputation
 
 An analysis remembers fingerprints of its inputs. The next analysis of the same model reuses the previous lower-bound
-facts when the LB knobs, constants and relevant settings are unchanged, and the previous upper-bound solver (with its
-memo) when the UB knobs, constants and relevant settings are unchanged. Moving an LB slider therefore only redoes the
-forward propagation (about 0.1–0.4 s on the full sheet); UB or constant changes redo both (about 1 s).
+facts when the LB knobs, constants and relevant settings are unchanged, and the previous upper-bound solver (with all
+its nodes) when the UB knobs, constants, relevant settings and the regimes the search starts from (§6.6) are
+unchanged; the overlay is new each time. Moving an LB slider, or switching an LB knob, therefore only redoes the
+forward propagation and the new regimes of the overlay (about 0.1–0.4 s on the full sheet); UB or constant changes
+redo both (about 1.1–1.5 s).
+
+### 6.9 Cycles that improve a bound (`src/engine/cycles.ts`)
+
+Going once around a cycle of reductions maps the bound of its first problem, at a regime, to a new bound of the same
+problem at the same regime: a nondecreasing map $H$ of the exponent (at the bound's power: a lap that ends at another
+power is not a repetition of the same map and is not extrapolated), computed by evaluating the lap's rows again with
+the same free parameters (the lower-bound threshold of §6.5 per row for lower bounds; the From-time with the other
+calls fixed for upper bounds). Usually going around gives nothing new, but a cycle can raise a lower bound or lower an
+upper bound every time. With a 3SUM hypothesis above $n^2$, rows 65 and 68 (3SUM → Exact Weight 3-Star Detection →
+3SUM) give $H(L) = 1.5L - 1$: a fixed point at 2, repelling above, so the bound grows without limit (and any 3SUM
+hypothesis above 2 contradicts the polynomial-time algorithms). Following such a cycle step by step never ends
+(earlier versions stopped after `maxHopsLB` reductions, at an arbitrary value such as 3.5 for Exact Weight 3-Star
+Detection).
+
+A new bound whose derivation contains an earlier, worse bound of the same problem and regime came around a cycle. The
+engine then takes the limit of $y, H(y), H(H(y)), \ldots$: the nearest fixed point of $H$ in the direction of
+improvement. When the calls only occur under sums, products, quotients by call-free terms, powers with call-free
+exponents, maxima, ceilings, roots, absolute values, polylogarithms, O-style bounds and sums over ranges, the exponent
+of a From-time is a maximum of affine functions of the calls' exponents, hence convex, so $H$ is convex for upper
+bounds; the lower-bound threshold inverts such a function, so $H$ is concave for lower bounds. Then the points where
+$H$ improves form an interval that ends at the nearest fixed point, and the engine finds it by steps that double from
+$H(y) - y$, then bisection between the last point $H$ still improves and the first it does not, to about $10^{-13}$
+(slow convergence costs no more than fast). A lower bound still improving at $10^6$, by at least as much at $2 \cdot
+10^6$, grows without limit (∞): so far beyond the breakpoints of the exponent maps the improvement is affine; if it
+shrinks, the search goes on (up to $10^{15}$) to the fixed point. The bound stored is one more lap from the last
+improving point: a valid bound on the safe side of the fixed point (below it for lower bounds, above it for upper
+bounds). Anything else around a call may break this: a `\min` (e.g. $\min(n\sqrt{T}, T^{3/2}/n)$ gives $H(U) = \min(1
++ U/2, 1.5U - 1)$, which improves on both sides of its fixed point 2, so doubling steps would jump over it), or a
+floor, which switches a term on with a jump. Such cycles are repeated lap by lap instead (up to 200 laps per limit).
+(An independent review of this version found both cases, which gave an upper bound of 0 instead of 2 and a lower bound
+of ∞ instead of 2.) Points where $H$ does not evaluate count as not improving, which only makes the limit less
+extreme. The limit's derivation records the lap and the bound it started from; the inspector shows the cycle, one lap
+(↻) and the start, and the Diagnostics tab lists the cycles. A node's bound changes at most 400 times and its limits
+are computed at most 8 times (later laps with re-optimized free parameters can move the fixed point a little); either
+cap adds a message. Cycles that change the regime on every lap are not repetitions of one map; they are followed like
+any other derivation, within the caps of §6.5 and §6.6.
+
+### 6.10 Explanations
+
+For a problem at a regime, the inspector lists every reduction from it (for the upper bound: `UpperBounds.explain`)
+and to it (for the lower bound: `explainLower`) with what it gives there or why it gives nothing:
+
+* upper bound: *gives this bound*; *gives* $\le N^u$ (worse, or as good through more reductions); *would take at least*
+  $N^{opt}$ *even with free calls* (skipped by branch and bound); *no upper bound for* the target at the regime its
+  calls land in, or *no upper bound found* there because the search stopped short at or below it (too many regimes not
+  of interest in a row, see `maxDepthUB`; found by following the nodes each node read); the row's
+  restriction does not hold, or it does not evaluate there; not used (status, or switched off in the settings);
+* lower bound: *gives this bound*; *gives* $\ge N^l$; *no lower bound for* the source; the source's lower bounds lead
+  to *other regimes* of the problem (listed); or the most frequent reason a grid point gives nothing, with the source
+  bound tried: the reduction itself is too slow ($R \ge L$), its calls land in several regimes, only on instances of
+  constant or polylogarithmic size, its overhead alone reaches the bound, it does not evaluate there, or it would solve
+  the source below its bound (an inconsistency); not used. Times in these reasons are written in the source regime's
+  parameters ("the reduction itself takes time 2^(0.5n), not less than the lower bound 2^(0.5n^0.75) it would
+  transfer").
+
+Both use the bounds the analysis found (explainLower re-derives from up to 24 lower bounds of the source, fewest
+reductions first), and are computed when the list is opened.
 
 ---
 
@@ -517,16 +736,22 @@ forward propagation (about 0.1–0.4 s on the full sheet); UB or constant change
   problem: kind, regime, exponent or formula; an empty regime means the main one, or every regime for an algorithm's
   formula) and × (removes the box and its knobs, after asking). Each knob shows an on/off checkbox, LB/UB, its Bound
   ID, a slider + number (any number of decimals) or a formula field (rendered preview while editing), ×, and below
-  them its regime (an inline field) and note; a knob that is off collapses to a one-line summary and its note. Above
+  them its regime (an inline field) and note; a knob that is off collapses to a one-line summary and its note. An
+  exponent knob of an exponential-time problem (CNF-SAT, MAX-CNF-SAT) has a third line with its **power** $a$ (§2.2):
+  a slider (0.05–2) and a number, and the running time rendered, e.g. $= 2^{0.5\,n^{0.75}}$ (other knobs get it only
+  if they have a power other than 1, e.g. from a bounds CSV). ƒ turns an exponent knob into the formula of its time
+  at its regime ($n^{2}$, $2^{0.5\,n^{0.75}}$), and x a formula knob into its exponent and power there (an algorithm
+  for every regime gets its problem's main regime, which an exponent needs). Above
   the boxes, counts and expand / collapse all; below them, **＋ Problem** (a new empty box with its form open, or the
   existing box shown). The inspector's "add here" opens a box's form prefilled with a regime. Constants (ω) with
   sliders. Settings. A link opens the initial-settings note. The panel is rebuilt only when the knobs or boxes change,
   so typing and dragging never lose focus; switching a knob on or off, new analyses and the selection update it in
   place.
 * **Center: graph** (Cytoscape). Nodes are problems, optionally boxed by family. Node color = status, label = name +
-  `≥ LB ≤ UB` at the primary regime (14 px at 100 % zoom). Edges: solid if the row is `ok`, dashed grey otherwise,
-  orange if it produced a displayed LB, blue if used by a displayed UB, purple if both. Search box, focus (below), zoom
-  buttons (−, 100 %, +, Fit), re-layout; double-clicking a problem or reduction also shows the inspector.
+  `≥ LB ≤ UB` at the primary regime (14 px at 100 % zoom; e.g. `≥ 2^(0.5n^0.75)  ≤ 2^n`). Edges: solid if the row
+  is `ok`, dashed grey otherwise, orange if it produced a displayed LB, blue if used by a displayed UB, purple if
+  both. Search box, focus (below), zoom buttons (−, 100 %, +, Fit), re-layout; double-clicking a problem or reduction
+  also shows the inspector.
   *Selection* (`src/ui/selection.ts`): a list of problems and reductions. A click selects the item alone; Shift-click
   (or Ctrl/⌘-click) adds it or, if selected, removes it, in the graph, the tables, the inspector's links and the boxes'
   names; a click on the background clears the selection. Selected problems get a teal border and halo, their reductions
@@ -570,32 +795,38 @@ forward propagation (about 0.1–0.4 s on the full sheet); UB or constant change
   *Nothing selected:* status counts, the edge legend, and an **Initial settings** side note: each group of
   `initialKnobs` with on/off, its description and (expandable) its knobs, and a **Restore initial settings** button
   (replaces knobs, constants and engine settings; sheet edits and pinned regimes are kept).
-  *Problem:* signature, regimes of interest with LB/UB/status, derivation trees (LB: chain back to a knob; UB: tree of
-  rows and child UBs; the regime opened is the one the "bound derivations" focus draws), "pin regime", "add a lower
-  bound / an algorithm here".
+  *Problem:* signature, regimes of interest with LB/UB/status, derivations as numbered lists (LB: the chain back to a
+  knob; UB: the bound, then the bounds its calls use, depth first and each once, a row with several calls naming their
+  items, e.g. "using 2 and 3"; the limit of a cycle shows the cycle, one lap marked ↻ and the bound it started from;
+  the regime opened is the one the "bound derivations" focus draws), under each a collapsed list of what every
+  reduction to or from the problem gives there or why it gives nothing (§6.10), "pin regime", "add a lower bound / an
+  algorithm here".
   *Several items:* a head with their number, expand all / collapse all / clear, then one collapsible section per item
   (title: name, status and bounds, or the reduction's ends; × removes it from the selection), in the order selected.
   *Reduction:* all sheet fields rendered with KaTeX (MathML output, no fonts needed), parsed formula, status and
   messages, free parameters and abbreviations, the LB facts it produced, a probe of the produced instances (target
-  regime and scale of each call, RT exponent) at a chosen source regime, "disable in scenario", and an editor (modal) for
+  regime and scale of each call, RT as a time) at a chosen source regime, "disable in scenario", and an editor (modal) for
   the From/To problems, the To-time / From-time / RT / Restrictions / Randomized / Hypothesis cells and the row's config
   annotation as JSON (live parse checks; the header's Reductions "＋ Add" uses the same form).
 * **Bottom tabs:** problems table (sortable, filtered by the search box), reductions table (status and first message of
-  every row, filter for unused rows), diagnostics (knob problems, inconsistencies, caps hit, CSV warnings, model
-  diagnostics such as signature disagreements). Selected rows are highlighted; clicks select as in the graph.
+  every row, filter for unused rows), diagnostics (the size of the analysis, knob problems, cycles that improve a bound
+  and their limits, inconsistencies (one line per reduction, source and message, with the number of regimes), caps
+  hit, CSV warnings, model diagnostics such as signature disagreements). Selected rows are highlighted; clicks select
+  as in the graph.
 
 State is kept in one immutable `AppState` (`src/ui/state.ts`); every change goes through `Store.update(fn)`
 (`src/ui/store.ts`), which compares the old and new state: a new sheet or config rebuilds the model and the analysis
 synchronously (views never see a mismatched pair); a new scenario or pinned regime schedules the analysis (debounced
 while a slider moves, with a busy indicator); views subscribe to the kinds of change they display. The scenario, pinned
 regimes and preferences, and the sheet/config when customized, are saved in `localStorage` (failures are ignored),
-together with a format number (now 3). Data saved by the first version (no format number) keeps its sheet and config
+together with a format number (now 4). Data saved by the first version (no format number) keeps its sheet and config
 edits, with the config's `presets` replaced by the current `initialKnobs`, but its knobs are replaced by the new initial
 scenario (a message says so). Format 2, written before Bound IDs were numbers, named the initial knobs
 `<group>/<variation>` (e.g. `seth/cnf-sat`) and knobs added in the app `k…`: such a knob gets the number of the initial
 knob it was (if no other knob has it yet), any other id that is not a number the next number after those of the knobs
-and of the initial settings, and a message says so; values, order and numeric ids are kept. Upgraded data is saved in
-the current format right away.
+and of the initial settings, and a message says so; values, order and numeric ids are kept. Formats 2 and 3 limited
+whole upper-bound derivations with `maxDepthUB` (default 4); a saved 4 becomes the new default 3 (other values are
+kept). Upgraded data is saved in the current format right away.
 
 ---
 
@@ -607,7 +838,7 @@ src/math/lexer.ts        LaTeX → tokens
 src/math/ast.ts          Expr ADT (immutable), free identifiers, T-call positions
 src/math/parser.ts       tokens → Formula (alternatives of Expr); ParseError with position
 src/math/cells.ts        math spans of a cell, primary formula, legend abbreviations
-src/growth/growth.ts     Growth ADT + algebra (§5)
+src/growth/growth.ts     Growth ADT + algebra (§5); rates of running times (power, exponent)
 src/growth/evaluate.ts   Expr × Env → Growth (with T-call handler and sum handling)
 src/model/regime.ts      Regime ADT, spec parsing, normalization, keys, display
 src/model/config.ts      config + scenario schemas and validators (no dependencies)
@@ -616,8 +847,9 @@ src/model/boxes.ts       a scenario's problem boxes (left panel; order of the bo
 src/model/boundsCsv.ts   bounds CSV ↔ knobs and boxes (§3.5)
 src/engine/freeparams.ts grids and refinement
 src/engine/rowEval.ts    evaluate one row at (regime, θ)
-src/engine/lower.ts      LB propagation
-src/engine/upper.ts      UB recursion
+src/engine/cycles.ts     limits of cycles that improve a bound (§6.9)
+src/engine/lower.ts      LB propagation; explanations for lower bounds
+src/engine/upper.ts      UB fixpoint (top-down solver, overlays); explanations for upper bounds
 src/engine/analysis.ts   scenario + model → Analysis (facts, per-problem summaries, statuses); derivation paths
 src/engine/explain.ts    per-row probes for the inspector
 src/ui/selection.ts      the selection: items, clicks with Shift / Ctrl / ⌘ (pure)
@@ -659,11 +891,45 @@ Unit tests (mocha + tsx) partition each module's input space:
 * **csv**: quoting, escaped quotes, embedded newlines, CRLF/LF, empty fields, BOM, trailing newline, round trip.
 * **lexer/parser**: every grammar construct; juxtaposition vs function application; subscripts; alternatives; errors
   with positions; every From-time formula in the sheet parses.
-* **growth**: each operation × each kind, including unknowns and error cases; exponent extraction.
+* **growth**: each operation × each kind, including unknowns and error cases; exponent extraction; the classes
+  $2^{c\,\ell^a}$ (from $2^{c\,\ell^p}$ with known, unknown and negative $c$, $p$ below and above 1; $n^{\log n}$; their
+  order against every kind, sums, products, powers, logarithms) and rates (`rateOf` of each kind, `rateGrowth` with a
+  scale, power-first comparison with tolerances, `exponentAtPower`).
 * **evaluate**: formulas from the sheet with hand-computed exponents (e.g. `2^{n/2}` with $n = \log_2 N$ gives
-  $N^{1/2}$; `\sum_{i=0}^{\log n} 4^i T(n/2^i)` gives $\max(x, 2)$).
-* **regime**: spec parsing, normalization (poly, exponential scale, degenerate), keys.
-* **engine**: synthetic graphs (chain, cycle, free parameters, sums, blocked RT, mixed regimes, conflicts, caps).
+  $N^{1/2}$; `\sum_{i=0}^{\log n} 4^i T(n/2^i)` gives $\max(x, 2)$); rates: `2^{0.5 n^{0.75}}`, `2^{n^{0.99}} \cdot m`,
+  `\tilde{O}(...)` of them, `2^{(2n)^{0.5}}`, `2^{O(n^{0.5})}` ($2^{o(n)}$), `n^{\log n}` and `2^{\sqrt{\log n}}` at a
+  polynomial regime, the largest term of a sum of $2^{\sqrt{i}}$.
+* **regime**: spec parsing, normalization (poly, exponential scale, degenerate), keys; growths rounded as the key, so
+  that one key stands for one regime; sub-polynomial parameters (`S`, the spec `sub`; polylogarithmic for
+  log-dependent ones; quasi-polynomial ones rejected); times of every power written in TeX.
+* **engine**: synthetic graphs (chain, cycle, free parameters, sums, blocked RT, mixed regimes, conflicts, caps); no
+  length limit (chains of 12 reductions, for upper bounds even with no detour allowed); detours through regimes not of
+  interest (within and beyond `maxDepthUB`; a pinned regime counts as of interest); the same bound for a problem inside
+  other derivations, whatever the order of the queries; cycles that raise a lower bound to a finite limit or without
+  limit (∞, also transferred through a reduction, including under roots of calls), a neutral cycle at the fixed point,
+  a cycle that lowers an upper bound to its limit, cycles through `\min` of calls (limits approached lap by lap, not
+  jumped over: no false ∞ or conflict); the same bounds whatever the order of the rows, and after a lower bound
+  changes (the search reused); a knob passed on to the nodes that read its node while it was postponed (a chain of 125
+  problems); cycles through a floor; limits of cycles at regimes not of interest listed — regressions from an
+  independent review of this version.
+* **rates** (`test/rates.test.ts`): lower bounds $2^{c\,n^a}$ keep their power through an identity and through a call on
+  an instance of another size (the exponent scaled by $s^a$), stop at a reduction that takes longer (with that reason),
+  reach a polynomial-scale problem through a cheap reduction ($2^{c \log^a t}$), grow without limit around a shrinking
+  cycle (∞ at power $a$); a bound of power 1 beats one of a smaller power whatever their exponents; formulas with a
+  power; upper bounds pass back through an identity, come from sub- and quasi-polynomial target bounds, are as large as
+  a reduction's own time, and the smaller power wins; a reduction that cannot beat a bound of a smaller power is
+  skipped (with its optimistic rate); statuses across powers; invalid powers. Regressions from an independent review:
+  powers computed in different ways ($(n^{0.1})^3$ against a knob of power 0.3) are one power; a log-dependent
+  parameter is one class per key (the same bounds whatever the order of the rows); the formulas written for exponent
+  knobs read back as the same rate (exponent 0 as o(·), every decimal kept).
+* **cycle limits** (`iterationLimit`): fixed points above and below, fast and slow convergence, plateaus, growth
+  without limit (geometric, linear) and fixed points far away (a plateau, an improvement that keeps shrinking beyond
+  $10^6$), starts that do not improve, maps that stop evaluating; the result is always on the safe side.
+  `iteratedLimit` (lap by lap) and `shapeKnown` (a call under `\min`).
+* **explanations**: every verdict for upper bounds (gives the bound, a worse one, skipped, a call without bound found
+  or with the search cut short below it, restriction, switched off) and for lower bounds (gives the bound, a smaller
+  one, source without bound, other regimes, too slow with the source bound it holds for, switched off), in sheet
+  order.
 * **integration** on the real sheet: every formula cell parses; no `ok` row is lost; SETH ⇒ OV 2, $k$-OV $k$, Edit
   Distance 2, LCS 2, Diameter 2 vs 3 (sparse) 2, Subset Sum 1 (in $t$); 3SUM ⇒ GeomBase, Convolution 3SUM, geometry 2;
   APSP 3 ⇒ the dense subcubic-equivalence class 3 (Negative Triangle, Distance Product, Radius, Betweenness, Replacement
@@ -674,7 +940,14 @@ Unit tests (mocha + tsx) partition each module's input space:
   simplification in an early annotation of row 316, whose legend bound assumes $T$ superadditive in $m$); the initial
   scenario is consistent and every initial knob (also the switched-off ones) is valid; the 2026 algorithms of Alman and
   Vassilevska Williams conflict with the 3SUM and APSP hypotheses throughout their classes but not with SETH, OV,
-  $k$-Clique or BMM, and give 3SUM in $n^{1.99915}$ through Exact Triangle (rows 53 and 60).
+  $k$-Clique or BMM, and give 3SUM in $n^{1.99915}$ through Exact Triangle (rows 53 and 60). With the initial settings,
+  every knob on, and the 2026 3SUM algorithm on: **no reduction gives a better bound than the one shown, and every
+  bound inside a derivation is its problem's own bound at that regime** (a certificate that the fixpoint was reached,
+  checked for every problem's primary regime with the explanations of §6.10); with the 2026 3SUM algorithm, 0-1
+  Knapsack, Unbounded Knapsack and Superadditivity Testing have the same bound below $n^2$ (4, 5 and 6 reductions,
+  each derivation through the next one's own); a 3SUM hypothesis of 2.05 makes 3SUM, Exact Weight 3-Star and
+  3-Matching Detection ∞ through a cycle, without hitting any cap; SETH as $2^{0.5\,n^{0.75}}$ is kept by MAX-CNF-SAT,
+  reaches no other problem, and is tight with an algorithm in $2^{0.5\,n^{0.75}}\,m$.
 * **config / initial scenario**: `initialKnobs` groups (on/off, notes, invalid entries), the old name `presets`,
   `initialScenario` (numbered ids, the config's kept, round trip through the scenario validator), scenario ids (kept,
   missing or repeated ones numbered), box order (`problems`: kept, blanks and repeats dropped, invalid, missing).
@@ -682,17 +955,22 @@ Unit tests (mocha + tsx) partition each module's input space:
   problem written differently, the box key of known and unknown problems.
 * **derivation paths**: a lower bound back along its chain, an upper bound through its tree (only the best of
   alternative reductions; several calls), bounds from a knob on the problem itself (the problem alone), missing bounds,
-  unknown problems, a given or unknown regime.
+  unknown problems, a given or unknown regime; ties between derivations (a better exponent wins, then fewer
+  reductions) and a detour through another problem and back (the direct reduction is taken).
+* **no detours** on the real sheet: with the initial settings and with every initial knob on, no derivation has a
+  problem at the same regime twice on a path, and Diameter's upper bound comes straight from APSP.
 * **selection and focus**: plain and additive clicks (alone keeping the item's regime; added at the end; removed),
   modifier keys, regimes of items; neighbours and lineage (ancestors and descendants with cycles and dead ends;
   selected reductions; unknown reductions), derivations united over the selection.
 * **saved data**: format-2 knob ids become the numbers of the initial knobs (all of the previous sample's 33 ids),
   added and other ids are numbered after them, a taken number is not reused, numeric ids are kept; format 3 is loaded
-  as is; the focus mode is restored when valid; the selection is not saved.
+  as is; a saved `maxDepthUB` of 4 from formats 2 and 3 becomes 3 (other values and format 4 are kept); the focus mode
+  is restored when valid; the selection is not saved.
 * **statuses**: conflicts as small as $10^{-4}$, and $n^{2-\Omega(1)}$ against $n^2$, are detected; floating-point noise
-  is not a conflict.
+  is not a conflict; bounds of different powers (conflict or gap by the powers).
 * **display precision** (`boundDecimals`): integers stay short, rounding never overstates a bound (1.99915, ω, 4/3),
-  search noise below an integer shows as the integer, conflicts and gaps hidden by four decimals get more.
+  search noise below an integer shows as the integer, conflicts and gaps hidden by four decimals get more (only between
+  bounds of the same power).
 * **regressions** from an independent code review: vanishing ceilings, dependent free-parameter ranges during
   refinement, thresholds for targets normalized by slowly growing parameters, $n^{2-\Omega(1)}$ runtimes, constant
   overflow, order-independent upper bounds.
@@ -702,10 +980,12 @@ Unit tests (mocha + tsx) partition each module's input space:
 * **panels**: size clamping, validation of saved sizes, window-dependent defaults.
 * **bounds CSV**: column presence and order, extra columns, Upper/Lower synonyms, exponents vs formulas (with `$...$`,
   `\Omega(...)`), regimes (given, invalid, foreign parameters, defaults), unknown and aliased problems, Bound IDs
-  (blank, repeated), Enabled values, row errors and line numbers, rows that only list a problem, problems in order of
+  (blank, repeated), Enabled values, the Power column (a power with an exponent, 1, with a formula, invalid; written
+  only when needed), row errors and line numbers, rows that only list a problem, problems in order of
   first appearance, write/read round trip (box by box, empty boxes), the sample file being current and reading back as
   exactly the initial scenario, merge of knobs and boxes (replace / add).
-* **display**: `timePlain` (polynomial, exponential with and without a factor, infinite).
+* **display**: `timePlain` (polynomial, exponential with and without a factor, infinite; powers other than 1 at both
+  scales, exponent 0, the rate zero).
 * **hover**: the off-view pointer (in view, partly in view on each side, outside on each side and at a corner,
   margins larger than the view), reference attributes.
 * **theme**: dark or not and the toggle for each theme × system setting (every toggle changes the look; agreeing with
@@ -719,7 +999,8 @@ Unit tests (mocha + tsx) partition each module's input space:
   (off > ancestors & descendants > neighbours > bound derivations), 3SUM's own knobs make it stand alone in its
   derivations, pointing at a box's name or an inspector #ID highlights that problem or reduction in the graph (and
   nothing once the pointer leaves), the light/dark toggle changes the page's colors and a second click restores them,
-  the inspector renders a problem (with a derivation) and a reduction, and the help dialog opens.
+  the inspector renders a problem (with a derivation) and a reduction, the help dialog opens, and CNF-SAT's SETH knob
+  has a power control (3SUM's has none): set to $2^{0.5\,n^{0.75}}$, its box and MAX-CNF-SAT's label show it.
 
 ---
 
@@ -744,13 +1025,21 @@ $\max(x_u, x_q)$ (one-dimensional bisection, as in §6.5). Dynamic *sources* wou
 
 ## 13. Known limitations
 
-* Exponents only; $N^{o(1)}$ factors and log-dependent parameters are invisible.
+* Rates only: at power $a$, factors $2^{o(\ell^a)}$ are invisible ($N^{o(1)}$ at power 1), and so are log-dependent
+  parameters. Times between the classes $2^{c\,\ell^a}$ are rounded up to one an upper bound can state
+  ($2^{O(\sqrt{n})}$ to $2^{o(n)}$, $N^{\log\log N}$ to none). A lower bound with an unknown constant, such as ETH's
+  $2^{\delta n}$ for some $\delta > 0$, needs a value for the constant.
 * Regime classes are coarse (§2.6). Results for sub-polynomial parameters (e.g. $d = c\log n$ for a specific $c$) are
   not distinguished.
 * Grid search with refinement may miss the exact optimum of continuous free parameters (by about $10^{-7}$ with the
   default settings, more with fewer grid points or rounds, or when the objective has several separated maxima). Such
   misses only weaken bounds (§6.3); differences below $10^{-4}$ are reported as tight.
-* UBs are found within `maxDepthUB` hops only.
+* Upper-bound derivations pass through at most `maxDepthUB` (default 3) regimes in a row that are not of interest
+  (§6.6); pin a regime to make it one. Lower-bound derivations have no limit except the caps (20 000 steps, 400
+  regimes per problem).
+* Cycles through `\min` of calls are repeated lap by lap (200 laps per limit), so their limits may be approached only;
+  cycles that move to another regime on every lap are followed step by step within the caps. A lower bound is taken to
+  grow without limit when it still improves, without slowing down, at exponents beyond $10^6$.
 * Rows whose formulas are prose, `??`, or use symbols that are not declared are skipped (listed in the Reductions tab).
 * `O(x)` is read as $\Theta(x)$ except for constants and logarithmic coefficients (§4.2); a formula that divides by an
   $O(\cdot)$ bound would be read optimistically (none in the sheet does).
