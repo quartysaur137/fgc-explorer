@@ -953,8 +953,10 @@ reductions first), and are computed when the list is opened.
   puts the focus in the field without scrolling the page to it), clears the search. Shift+Enter adds to the
   selection, like Shift-click. Only names and notes whose marks change are rewritten, and the search texts are
   kept in lower case per problem and per knob, so that typing stays quick.
-* **Center: graph** (Cytoscape). Nodes are problems, optionally boxed by family (problems without a family, and the only
-  problem of a family, stand on their own). Node color = status and label = name +
+* **Center: graph** (Cytoscape). Nodes are problems, optionally boxed by family (the *family boxes* toggle, a
+  preference, off by default since format 10 of the saved data: with the boxes drawn, a drag that starts inside a box
+  moves the box, which made panning hard; problems without a family, and the only problem of a family, stand on their
+  own). Node color = status and label = name +
   `≥ LB ≤ UB`, both at the primary regime (§6.7; 14 px at 100 % zoom; e.g. `≥ 2^(0.5n^0.75)  ≤ 2^n`). Edges: solid if
   the row is `ok`, dashed grey otherwise, orange if it produced a listed LB, blue if used by a listed UB, purple if
   both. Search field (above), focus (below), zoom buttons (−, 100 %, +, Fit), re-layout; double-clicking a problem or
@@ -986,7 +988,8 @@ reductions first), and are computed when the list is opened.
   cover about a third of the drawing and no two ever overlap. Node sizes depend only on the names (text measured on a
   canvas; one line reserved for the bounds), so analyses never move anything; editing formulas keeps every position;
   adding problems keeps every unchanged box exactly in place and puts new or grown boxes at the nearest free spot;
-  "Re-layout" starts over with a new seed. The family-boxes toggle only shows or hides the boxes.
+  "Re-layout" starts over with a new seed. The family-boxes toggle only shows or hides the boxes (the layout keeps each
+  family together either way).
 * **Light / dark mode** (`src/ui/theme.ts`; a preference): `system` (the default) follows the operating system's
   setting, also when it changes; `light` and `dark` are explicit. The header's toggle (a moon, pressed in dark mode)
   always switches to the other look, and stores `system` when the new look is the system's, so it has no state that
@@ -1040,7 +1043,7 @@ State is kept in one immutable `AppState` (`src/ui/state.ts`); every change goes
 synchronously (views never see a mismatched pair); a new scenario or pinned regime schedules the analysis (debounced
 while a slider moves, with a busy indicator); views subscribe to the kinds of change they display. The scenario, pinned
 regimes and preferences, and the sheet/config when customized, are saved in `localStorage` (failures are ignored),
-together with a format number (now 8). Data saved by the first version (no format number) keeps its sheet and config
+together with a format number (now 10). Data saved by the first version (no format number) keeps its sheet and config
 edits, with the config's `presets` replaced by the current `initialKnobs`, but its knobs are replaced by the new initial
 scenario (a message says so). Format 2, written before Bound IDs were numbers, named the initial knobs
 `<group>/<variation>` (e.g. `seth/cnf-sat`) and knobs added in the app `k…`: such a knob gets the Bound ID of the
@@ -1073,7 +1076,9 @@ own. A custom config saved before format 7 gets the built-in limits of parameter
 in it (its own are kept); a config file loaded later is used as it is. A saved custom config is used even when it has
 problems (e.g. two row annotations whose IDs became one with the letter): its valid parts, with a message, as when a
 config file is loaded; one that is not a JSON object is ignored. Formats 2 and 3 limited whole upper-bound derivations with `maxDepthUB` (default 4); a saved 4
-becomes the new default 3 (other values are kept). Upgraded data is saved in the current format right away.
+becomes the new default 3 (other values are kept). Format 10 turned the family boxes off by default: data saved before
+has them off (on was the default then, so a saved "on" is no choice), later data keeps its setting. Upgraded data is
+saved in the current format right away.
 
 ---
 
@@ -1273,9 +1278,9 @@ Unit tests (mocha + tsx) partition each module's input space:
   saved it under the new ID it got; rounded exponents of knob
   regimes and pins become fractions again before format 5; a saved config with problems is used for its valid parts (a
   non-object is ignored); a custom config before format 7 gets the built-in limits where it has none (its own kept);
-  format 9 is loaded as is; a saved `maxDepthUB` of 4 from
-  formats 2 and 3 becomes 3 (other values and format 4 are kept); the focus mode is restored when valid; the selection
-  is not saved.
+  format 10 is loaded as is; a saved `maxDepthUB` of 4 from
+  formats 2 and 3 becomes 3 (other values and format 4 are kept); the focus mode is restored when valid; the family
+  boxes are off before format 10 (whatever was saved) and as saved from format 10 on; the selection is not saved.
 * **statuses**: conflicts as small as $10^{-4}$, and $n^{2-\Omega(1)}$ against $n^2$, are detected; floating-point noise
   is not a conflict; bounds of different powers (conflict or gap by the powers).
 * **display precision** (`boundDecimals`): integers stay short, rounding never overstates a bound (1.99915, ω, 4/3),
@@ -1319,7 +1324,8 @@ Unit tests (mocha + tsx) partition each module's input space:
 * **theme**: dark or not and the toggle for each theme × system setting (every toggle changes the look; agreeing with
   the system means following it); saved themes restored, invalid ones replaced by `system`.
 * **e2e** (Playwright, optional): the built HTML loads without console errors and without any network request, renders
-  all problems with their default bounds and the initial-settings note (with switched-off knobs as compact rows), one
+  all problems with their default bounds and the initial-settings note (with switched-off knobs as compact rows), no
+  family boxes until the toggle draws them (and takes them away again), one
   box per problem in the left panel, labels are larger than 2.5 px at "fit" (about 3 px for the 243 problems, depending
   on the layout's seed) and grow when the panels are hidden, a knob
   change through the UI updates the graph, the sample bounds CSV imports, the header's segments name every button
