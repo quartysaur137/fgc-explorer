@@ -243,7 +243,7 @@ identifiers used in their rows' From-time formulas (marked *inferred* in the UI)
     "R90":  { "skip": "reason shown in the UI" }
   },
   "initialKnobs": [
-    { "label": "SETH", "description": "CNF-SAT needs $2^{(1-o(1))n}$ time",
+    { "label": "Satisfiability Hypothesis", "description": "CNF-SAT on $n$ variables and $\\text{poly}(n)$ clauses needs …",
       "knobs": [ { "id": "L1", /* + a scenario knob without id/enabled, §3.4 */ } ] },
     { "label": "OV hypothesis", "enabled": false, "knobs": [ ... ] }
   ]
@@ -253,21 +253,25 @@ identifiers used in their rows' From-time formulas (marked *inferred* in the UI)
 `initialKnobs` is the scenario a first visit starts with (and **Restore initial settings** returns to): every knob of
 every group, switched on unless its group has `"enabled": false`, with the group's label as its note unless the knob has
 its own `note`. Each knob has a **Bound ID** `id`: `L1`, `L2`, … for lower bounds and `U1`, `U2`, … for upper bounds,
-numbered separately (the built-in ones are L1–L13 and U1–U422); keep them when editing and give new knobs the next free
+numbered separately (the built-in ones are L1–L15 and U1–U441); keep them when editing and give new knobs the next free
 one of their kind, since the bounds CSV (§3.5) matches rows to knobs by them. A missing id gets the next free one of its
 kind; a repeated or invalid one is reported and replaced the same way; other text is kept. A bare number is a Bound ID of
 the versions before the letters, which numbered all knobs together (the initial ones 1–33, the user's after them), and
 is converted by number and kind alone, so that a knob gets the same ID wherever it was saved (`legacyBoundId`): a lower
 bound n becomes Ln (the initial ones L1–L9), an upper bound 10–33 U1–U24 (the IDs those initial knobs have now) and
-one from 34 up U(n + 334) (after the built-in U367 of then; the knobs added since have U368–U422 and L10–L13, and a
+one from 34 up U(n + 334) (after the built-in U367 of then; the knobs added since have U368–U441 and L10–L15, and a
 saved knob of the user's with one of those IDs moves to another one, see §7); an upper bound below 10 gets a new ID. The
 groups are only a description of where the starting knobs come from; the UI shows them in the "Initial settings" note
 (§7) but has no per-group toggles, so each knob is edited on its own. (The first version called
 this section `presets`; a config using that name is still read, with a message asking to rename it.) The built-in groups
-are SETH, the 3SUM and APSP hypotheses and the textbook algorithms (on), and the OV, Min-Weight $k$-Clique, $k$-Clique
-and combinatorial BMM hypotheses and the algorithms of Alman and Vassilevska Williams (arXiv:2610.06783, Oct 2026: 3SUM
-in $n^{1.9992}$, APSP and (min,+)-product in $n^{2.9995}$, Exact Triangle in $n^{2.9983}$, their real-valued versions in
-$n^{1.998}$ / $n^{2.998}$, Mono Convolution in $n^{1.4999}$) and of Saha and Ye (arXiv:2610.20297, Oct 2026: a
+are the **Satisfiability Hypothesis** (SETH as stated for CNF-SAT with $\text{poly}(n)$ clauses, L1; called "SETH" until
+format 11 of the saved data, §7, since a $2^{o(n)}$-time algorithm for $k$-SAT announced in October 2026, a preprint not
+yet refereed, refutes ETH and the $k$-SAT form of SETH, though not this CNF form), the 3SUM and APSP hypotheses and the
+textbook algorithms (on), and the OV, Min-Weight $k$-Clique, $k$-Clique and combinatorial BMM hypotheses and the
+algorithms of Alman and Vassilevska Williams (arXiv:2610.06783, Oct 2026: 3SUM in $n^{1.9992}$, APSP and (min,+)-product
+in $n^{2.9995}$, Exact Triangle in $n^{2.9983}$, their real-valued versions in $n^{1.998}$ / $n^{2.998}$, Mono
+Convolution in $n^{1.4999}$, and their Theorem 1, Lopsided All-Edges Sparse Triangle in $n^2/d^{0.063}$ at $d =
+n^{1/18}$, U440, which gives Exact Triangle in $n^{3 - 0.063/36} = n^{2.99825}$ through row R453) and of Saha and Ye (arXiv:2610.20297, Oct 2026: a
 simpler, faster deterministic (min,+)-product for integer entries of size $n^{O(1)}$ in $\tilde O(n^{2.9963432})$; the
 group gives it to Distance Product and Directed Weighted APSP, U368–U369, and the reductions of the sheet carry it to
 the rest of the APSP class, among them the problems the paper names: Negative Triangle, Replacement Paths, Second
@@ -276,9 +280,15 @@ problems added with rows R320–R365 are off too: the **OMv conjecture** (OMv ne
 whose other consequences are dynamic problems), the **Hitting Set hypothesis** ($n^{2-o(1)}$ at $d = \mathrm{polylog}(n)$,
 L11), the **∀∀∃-OV hypothesis** ($n^{3-o(1)}$, L12) and the **3-uniform hyperclique hypothesis** ($n^{k-o(1)}$ for
 $k = 4, 5, 6, 9, 12, 30, 300$, L13; the large $k$ because the bound it gives Klee's measure problem in 3D, through R355,
-is $N^{k/(2\lceil k/3 \rceil + 1)}$, which tends to Chan's $N^{1.5}$ only as $k$ grows). Two more groups (on) give upper
-bounds for most static problems of the sheet (§3.6): **Trivial algorithms** (189 knobs: brute force and textbook
-algorithms following from the definitions) and **Best known algorithms** (205 knobs: the fastest algorithms found in the
+is $N^{k/(2\lceil k/3 \rceil + 1)}$, which tends to Chan's $N^{1.5}$ only as $k$ grows). So are those of the problems
+added with rows R432–R465: the **$k$-AP hypothesis** ($k$-AP Detection needs $N^{2-o(1)}$ for $k = 4, 5, 6$, L14; Fischer
+2026 proposes it in place of the 3SUM hypothesis for the geometric problems, and derives their lower bounds from it
+through $k$-GeomBase, rows R432–R444) and the **Zero-Weight $k$-Clique hypothesis** ($n^{k-o(1)}$ for $k = 3, \dots, 6$
+with weights $n^{O(k)}$, L15; the 2026 Exact Triangle algorithm refutes it for every $k$, which the app shows at $k = 3$
+and 6, where the folding of row R458 is tight; without it, the 3SUM and APSP hypotheses give $n^{3-o(1)}$ for every $k$
+through Exact Triangle and the row from $k$ to $k + 1$, R464). Two more groups (on) give upper
+bounds for most static problems of the sheet (§3.6): **Trivial algorithms** (198 knobs: brute force and textbook
+algorithms following from the definitions) and **Best known algorithms** (214 knobs: the fastest algorithms found in the
 literature, with sources); **Non-combinatorial algorithms** (off) holds Valiant's CFG parser and the transitive closure
 by fast matrix multiplication, which conflict with the combinatorial BMM hypothesis through R126 (Lee's reduction) and
 R356 (BMM to transitive closure), as that hypothesis only concerns combinatorial algorithms.
@@ -395,7 +405,7 @@ appended; the file's new problems get boxes after the current ones). Constants a
 **Export** writes the boxes in order, each box's knobs in a row each (an empty box as a row with only its problem), in
 the same format (formulas in `$...$`, exponents as numbers, all eight columns, and `Power` after `Runtime` when a knob
 has a power other than 1); reading it back gives the same boxes and knobs. The initial knobs keep their config ids
-(L1–L13, U1–U422), so their rows are grouped by problem rather than sorted by id; exporting right after "Restore initial
+(L1–L15, U1–U440), so their rows are grouped by problem rather than sorted by id; exporting right after "Restore initial
 settings" gives exactly `data/initial-bounds.csv`, the sample file (regenerate it with `npm run bounds-sample` after
 changing `initialKnobs`; a test fails while it is out of date). Knobs added in the app also get the next free ID of
 their kind, and each knob shows its Bound ID (`U7`).
@@ -436,6 +446,17 @@ secondary source. Conventions:
   Exact Triangle and #All-Edges Monochromatic Triangle, whose other rows are skipped) got theirs: listing all triangles
   in $O(m^{3/2})$ (U419, U420), $\tilde O(M n^{\omega})$ for small weights by the encoding of U240 (U422), and $O(c\,n^{\omega})$ by
   squaring the adjacency matrix of every color class (U421).
+* The nine problems added with rows R432–R462 (Nov 2026) got theirs from their sources and definitions (U423–U439):
+  $k$-AP Detection in $O(kN^2)$, and for $k = 3$ in $O(N \log N)$ by FFT; $k$-GeomBase in $O(kn^2 \log n)$; the
+  covering, stabbing and double-wedge problems in $O(n^3)$ by testing the faces of an arrangement, and in $O(n^2)$ by
+  traversing it (Gajentaan–Overmars, Bertschinger et al.); Lopsided All-Edges Sparse Triangle in $O(nd + wd)$, and in
+  $n^{2+o(1)}$ at its regime $d = n^{1/18}$ by rectangular matrix multiplication; #Exact Triangle in $O(m^{3/2})$, and
+  with small weights in $\tilde O(M n^{\omega})$ by the encoding of U240; Zero-Weight $k$-Clique in $O(k^2 n^k)$, and
+  with small weights, for $k = 3, 6$, in $\tilde O(M n^{\omega k/3})$ by folding. The lopsided problem is looked at only
+  where Theorem 1 of Alman and Vassilevska Williams applies ($d = n^{1/18}$, $w = n^{71/36}$, its only regime); row R453
+  fixes its free parameter $d$ there and optimizes the number of groups $g$.
+* Chan's $O(N^{d/2})$ for Weighted Depth holds for every constant $d \ge 3$: U361 lists $d \le 4$, and U441 (added with
+  rows R463–R465) $d = 5, 6$, which the cubic lower bound of Max-Weight $k$-Clique (R463, R367) reaches through R277.
 * Known caveat about an older knob: `Known algorithms`' $k$-Clique bound $n^{\omega k/3}$ is achieved for $k$ divisible
   by 3 only; for $k = 4, 5$ the best known exponents are $\omega(1,1,2) < 3.250035$ and $\omega(1,2,2) < 4.085552$
   (`Best known algorithms`), so that knob is optimistic there.
@@ -671,8 +692,12 @@ larger exponent), or one equal within 1e-9 reached with fewer hops (reductions):
 shortest is kept, so a chain never takes a detour (the FIFO order mostly finds the shortest first; the rule also covers
 facts that improve later). Termination: each fact is popped at most once per improvement; an improvement raises the
 exponent by more than 1e-9 or lowers the hops, and a cycle that would raise a bound again and again is replaced by its
-limit (at most 8 times per key; the 20 000 steps cap everything else). Facts per problem are capped at 400 keys (warning
-shown).
+limit (at most 8 times per key; the 20 000 steps cap everything else). Facts per problem are capped at 1000 keys (warning
+shown). A fact at a new key that only repeats one of its own chain, at nearly the same regime of the same problem
+(exponents within a relative $10^{-4}$) and without a larger bound, is dropped: a cycle that permutes parameters (Set
+Disjointness and the lopsided triangle problem, rows R455 and R460) normalizes by another parameter on every lap, and its
+exponents, rounded up to 6 decimals, come back a little larger each time, at a new key; so it ends as one that comes back
+to the same key.
 
 An infinite lower bound (the limit of a cycle without fixed point) transfers like any other: through a row whose calls
 land in one regime and whose From-time grows without limit with the calls' cost, the target needs superpolynomial time
@@ -811,7 +836,17 @@ poly$(n)$ / polylog$(n)$.
 
 **Order, primary regime and listing** (`src/engine/regimeRank.ts`). A problem's regimes are ordered for display; the
 first is its **primary regime**: the graph's label and color, its box's bounds and the problems table show it, and the
-problem's status is its status. A regime reads nicely by its parameters (the main one, growth classes such as polylog,
+problem's status is its status. When it fixes a constant parameter in the exponent, such as $k$ (its family: the
+listed regimes that differ from it only in that parameter's value, which changes the bounds), the label,
+the box and the table show the bounds as functions of the parameter instead (`src/ui/paramFamily.ts`): the bound's
+exponents at the listed values (three at least) are one line $a k + b$ whose coefficients are simple fractions, or
+such fractions of ω (k-OV under SETH: `≥ n^k  ≤ n^k  (k = 2–6, 8)`; k-Clique: `≤ n^(ωk/3)`; Klee's measure problem:
+`≤ N^(d/2)`; Min-Weight $k$-Clique, whose lower bound does not grow with $k$: `≥ n^3  ≤ n^k  (k = 3–6)`), and otherwise
+only the status at each value (`k = 3: tight · k = 4–6: upper bound`, in the graph `k=3 tight · 4–6 UB`), so that
+$k = 3$'s $n^{\omega}$ does not read as k-Clique's bound. The family also counts when only the presence of a bound
+changes (Min-Weight $k$-Cycle without row R465: $n^3$ at every $k$, a lower bound at $k = 3$ only). The
+color stays the primary regime's. A parameter whose values all give the same bounds (edit distance's alphabet sizes)
+keeps the primary regime's line. A regime reads nicely by its parameters (the main one, growth classes such as polylog,
 an unspecified constant and log-dependent parameters do not count; exponents count, and constants by their values):
 whole numbers ($m = n^2$, $m = n$, $k = 4$) are tier 0; halves, thirds and quarters up to 3 ($n^{3/2}$, $n^{4/3}$) tier
 1; fifths and sixths up to 4 tier 2; anything else ($n^{10/11}$, $n^{11.5}$) tier 3, which free parameters of reductions
@@ -957,9 +992,12 @@ reductions first), and are computed when the list is opened.
   preference, off by default since format 10 of the saved data: with the boxes drawn, a drag that starts inside a box
   moves the box, which made panning hard; problems without a family, and the only problem of a family, stand on their
   own). Node color = status and label = name +
-  `≥ LB ≤ UB`, both at the primary regime (§6.7; 14 px at 100 % zoom; e.g. `≥ 2^(0.5n^0.75)  ≤ 2^n`). Edges: solid if
+  `≥ LB ≤ UB`, both at the primary regime (§6.7; 14 px at 100 % zoom; e.g. `≥ 2^(0.5n^0.75)  ≤ 2^n`), or for a constant
+  parameter in the exponent the bounds as functions of it (`≥ n^k  ≤ n^k`) or the status at each value
+  (`k=3 tight · 4–6 UB`; §6.7). Edges: solid if
   the row is `ok`, dashed grey otherwise, orange if it produced a listed LB, blue if used by a listed UB, purple if
-  both. Search field (above), focus (below), zoom buttons (−, 100 %, +, Fit), re-layout; double-clicking a problem or
+  both; a row from a problem to itself (from $k$ to $k + 1$, R463–R465) is a small loop above its node, drawn over the
+  other nodes, as the layout leaves little room between them. Search field (above), focus (below), zoom buttons (−, 100 %, +, Fit), re-layout; double-clicking a problem or
   reduction also shows the inspector.
   *Selection* (`src/ui/selection.ts`): a list of problems and reductions. A click selects the item alone; Shift-click
   (or Ctrl/⌘-click) adds it or, if selected, removes it, in the graph, the tables, the inspector's links and the boxes'
@@ -1043,7 +1081,7 @@ State is kept in one immutable `AppState` (`src/ui/state.ts`); every change goes
 synchronously (views never see a mismatched pair); a new scenario or pinned regime schedules the analysis (debounced
 while a slider moves, with a busy indicator); views subscribe to the kinds of change they display. The scenario, pinned
 regimes and preferences, and the sheet/config when customized, are saved in `localStorage` (failures are ignored),
-together with a format number (now 10). Data saved by the first version (no format number) keeps its sheet and config
+together with a format number (now 12). Data saved by the first version (no format number) keeps its sheet and config
 edits, with the config's `presets` replaced by the current `initialKnobs`, but its knobs are replaced by the new initial
 scenario (a message says so). Format 2, written before Bound IDs were numbers, named the initial knobs
 `<group>/<variation>` (e.g. `seth/cnf-sat`) and knobs added in the app `k…`: such a knob gets the Bound ID of the
@@ -1054,7 +1092,7 @@ knob keeps its place, e.g. 10 → U1, a user's knob gets the same ID in the scen
 U368; a disabled row 106 is R106) and regime specs of knobs and pins get their fractions back (§6.7). The initial
 knob groups added since the saved format (format 5: `Trivial algorithms`, `Best known algorithms`, `Non-combinatorial
 algorithms`; format 6: `Saha & Ye 2026`; format 8: the OMv, Hitting Set, ∀∀∃-OV and 3-uniform hyperclique hypotheses;
-`GROUPS_ADDED_IN`) are added to a saved custom config's `initialKnobs`
+format 11: the $k$-AP and Zero-Weight $k$-Clique hypotheses; `GROUPS_ADDED_IN`) are added to a saved custom config's `initialKnobs`
 (unless the config has one of their knobs: the same Bound ID, read as the validator reads it, for the same problem, so
 that a user's group of the same name does not hide them; a knob whose ID the config has for another knob comes without
 it and gets the next free one), and their knobs, with the IDs the initial settings (built-in or that config) give them,
@@ -1065,19 +1103,32 @@ settings name the knobs of the left panel (whose links in the "Initial settings"
 message says so, and which IDs moved (not before format 5, when every ID changed). The knobs a format added to groups
 that existed (format 8: U370–U418, the algorithms of the problems of rows R320–R365, in `Trivial algorithms`, `Best known
 algorithms` and `Non-combinatorial algorithms`; format 9: U419–U422, the algorithms of the two problems the trivial
-reductions R366–R431 gave a signature; `KNOBS_ADDED_IN`) are added the same way: to a group of the same label
+reductions R366–R431 gave a signature; format 11: U423–U440, the algorithms of the problems of rows R432–R462, in
+`Trivial algorithms`, `Best known algorithms` and `Alman & Vassilevska Williams 2026`; format 12: U441, Chan's Weighted
+Depth algorithm for $d = 5, 6$, in `Best known algorithms`; `KNOBS_ADDED_IN`) are added the same way: to a group of the same label
 of a saved custom config (where it has one; of several, the one holding the built-in group's other knobs, as a user's
 group may have the same label), unless it has the knob (the same Bound ID for the same problem, or the same bound:
 problem, kind, formula or exponent, power and regime), and to the saved knobs (recognized by what they are, as a custom
 config may give them other IDs). A group is likewise there already when all its knobs are there as the same bounds (a
-knob added without the Bound ID the config had for another knob gets a new one, which an earlier version saves). A custom config saved before format 8 or 9 also gets the built-in entries of the problems and rows that format
-added (`ENTRIES_ADDED_IN`: their regimes and limits, and the free parameters of the new rows) where it has none of its
-own. A custom config saved before format 7 gets the built-in limits of parameters (§2.3) for every problem that has none
+knob added without the Bound ID the config had for another knob gets a new one, which an earlier version saves). A custom config saved before format 8, 9, 11 or 12 also gets the built-in entries of the problems and rows that format
+added (`ENTRIES_ADDED_IN`: their regimes and limits, the free parameters of the new rows, and in format 12 the
+restrictions of rows R118, R434 and R463–R465 to some values of $k$) where it has none of its own. The entries a format
+changed (`ENTRIES_CHANGED_IN`; format 12: k-GeomBase, listed for $k \ge 4$ only) replace those of a custom config saved
+before where its entry is still the old built-in one (the same JSON up to the order of keys; an edited entry is kept).
+The same table repairs a custom config saved by the first version of format 11, whose row entries were numbered before
+two rows were removed: its entries for R435, R453 and R455 of then (k-GeomBase to GeomBase, 4-AP Detection to 3-uniform
+4-hyperclique, Exact Triangle to the lopsided problem) give way to the built-in entry of R453 (the lopsided row's) or
+go (R435, R455), unless edited, and the row now numbered R434 gets its entry as one of format 12. A custom config saved before format 7 gets the built-in limits of parameters (§2.3) for every problem that has none
 in it (its own are kept); a config file loaded later is used as it is. A saved custom config is used even when it has
 problems (e.g. two row annotations whose IDs became one with the letter): its valid parts, with a message, as when a
 config file is loaded; one that is not a JSON object is ignored. Formats 2 and 3 limited whole upper-bound derivations with `maxDepthUB` (default 4); a saved 4
 becomes the new default 3 (other values are kept). Format 10 turned the family boxes off by default: data saved before
-has them off (on was the default then, so a saved "on" is no choice), later data keeps its setting. Upgraded data is
+has them off (on was the default then, so a saved "on" is no choice), later data keeps its setting. Format 11 renamed the
+group `SETH` `Satisfiability Hypothesis` (`GROUPS_RENAMED_IN`): in a custom config saved before, a group with the old
+label that has one of the built-in group's knobs (the same Bound ID for the same problem; a user's own group of that
+name keeps it) gets the new label, and the new description if it has the old one; a saved knob of that group whose note
+is the old label (the default note) gets its new default note (the built-in knob's note, or the label in a custom
+config); format 2's knob names (`seth/cnf-sat`) are read with the labels of then. Upgraded data is
 saved in the current format right away.
 
 ---
@@ -1166,7 +1217,9 @@ Unit tests (mocha + tsx) partition each module's input space:
   interest (within and beyond `maxDepthUB`; a pinned regime counts as of interest); the same bound for a problem inside
   other derivations, whatever the order of the queries; cycles that raise a lower bound to a finite limit or without
   limit (∞, also transferred through a reduction, including under roots of calls), a neutral cycle at the fixed point,
-  a cycle that lowers an upper bound to its limit, cycles through `\min` of calls (limits approached lap by lap, not
+  a cycle that permutes parameters, whose rounded exponents would move its regime a little on every lap (one regime per
+  problem, finite or infinite bound, no cap), a row from a problem to itself that raises a constant parameter (both
+  bounds carried as far as its `requires` lets them, no cap), a cycle that lowers an upper bound to its limit, cycles through `\min` of calls (limits approached lap by lap, not
   jumped over: no false ∞ or conflict); the same bounds whatever the order of the rows, and after a lower bound
   changes (the search reused); a knob passed on to the nodes that read its node while it was postponed (a chain of 125
   problems); cycles through a floor; limits of cycles at regimes not of interest listed — regressions from an
@@ -1227,8 +1280,20 @@ Unit tests (mocha + tsx) partition each module's input space:
   bounds, All-Edges Exact Triangle at $n^3$, 0-1 Knapsack and Bicriteria $s,t$-Path at the target size (SETH through
   Subset Sum), 2-LCS at $n^2$, 2D Maximum Subarray as $d$-dimensional one at $n^3$, ST-Maximum Flow at $|S| = |T| = n$
   at $n^3$; with the $k$-Clique hypothesis Triangle Detection at $n^{\omega}$ (Nešetřil–Poljak); with the 2026
-  algorithms 3SUM in $n^{1.998}$ through Real 3SUM (and $n^{1.99915}$ through Exact Triangle without the rows to the
-  real-valued versions). No pair of problems has two trivial rows, and the two shortcuts left out (§13) stay out.
+  algorithms 3SUM in $n^{1.998}$ through Real 3SUM (and, without the rows to the real-valued versions, $n^{1.999125}$
+  through Exact Triangle in $n^{2.99825}$ from the lopsided problem, row R453; $n^{1.99915}$ from the stated $n^{2.9983}$
+  alone). No pair of problems has two trivial rows, and the two shortcuts left out (§13) stay out. The rows R432–R465:
+  under the $k$-AP hypothesis alone (with the algorithms) $k$-AP Detection and $k$-GeomBase at $M = n$ ($k = 4, 5, 6$,
+  $k$-GeomBase's only regimes), the narrowest colour-spanning strip, the separator, covering, visibility,
+  motion-planning, horizon, stabbing and double-wedge problems are tight at $n^2$ and 3-uniform 4-hyperclique at $n^4$
+  (R434; nothing at $k = 5$), with no conflict, and 3-AP Detection is near-linear; with the initial settings the
+  lopsided problem is tight at $n^2$, #Exact Triangle and Zero-Weight 3-Clique at $n^3$, the narrowest colour-spanning
+  strip with 3 colours (R39) and Stabbing and Avoiding Segments at $n^2$, $k$-GeomBase has no lower bound, Min-, Max-
+  and Zero-Weight $k$-Clique are between $n^3$ and $n^k$ and Min-Weight $k$-Cycle tight at $n^3$ for $k = 4, 5, 6$
+  (R463–R465), with no regime beyond $k = 6$, Weighted Depth between $N^{3/2}$ and $N^{d/2}$ for $d = 4, 5, 6$, and
+  Multiple Local Alignment has no fractional number of strings (R118, even $k$ only); with the 2026 algorithms the lopsided problem is at $n^{2 - 0.063/18}$, in conflict with the APSP hypothesis,
+  and the Zero-Weight $k$-Clique hypothesis conflicts at $k = 3$ and 6 but not 4 and 5, while the $k$-Clique hypothesis
+  makes Zero-Weight $k$-Clique with constant weights tight at $n^{\omega k/3}$ ($k = 3, 6$).
 * **limits of parameters** (`constraints.ts`): parsing (powers in every notation, products, sums, constant factors, a
   reason; malformed ones, unknown parameters, a parameter bounding itself); clipping (none; limits that hold; a
   polynomial clipped to a polynomial or a polylogarithm; a chain, $m \le n\alpha$ lowering the limit of $t$; the
@@ -1261,14 +1326,18 @@ Unit tests (mocha + tsx) partition each module's input space:
   modifier keys, regimes of items; neighbours and lineage (ancestors and descendants with cycles and dead ends;
   selected reductions; unknown reductions), derivations united over the selection.
 * **saved data**: format-2 knob ids become the Bound IDs of the initial knobs (all of the previous sample's 33 ids),
-  added and other ids get new ones after them (L14, …), a taken ID is not reused, Bound IDs are kept; format 3 keeps
+  added and other ids get new ones after them (L16, …), a taken ID is not reused, Bound IDs are kept; format 3 keeps
   text ids; format 4's numbers become the initial knobs' IDs (10 → U1, 26 → U17) or the user's (34 → U368, 35 → L35);
   the knobs of the groups added since, and those added since to groups there were, are appended with the IDs of the
   initial settings (once, with one message that counts hypotheses and algorithms: before format 5 those of formats 5, 6,
-  8 and 9, and the user's 34, read as U368, moves to the next free ID, U423; format 5 those of formats 6, 8 and 9, and a
-  knob the user added as U368 moves to U423, which the message says; format 7 those of formats 8 and 9, the hypotheses
-  switched off, and a knob the user added as U370 moves to U423; format 8 the four algorithms of format 9, also into a
-  custom config of format 8 with its two problems' entries; saved again by the previous version, nothing is added twice)
+  8, 9, 11 and 12, and the user's 34, read as U368, moves to the next free ID, U442; format 5 those of formats 6, 8, 9,
+  11 and 12, and a knob the user added as U368 moves to U442, which the message says; format 7 those of formats 8, 9, 11
+  and 12, the hypotheses switched off, and a knob the user added as U370 moves to U442; format 8 those of formats 9, 11
+  and 12, also into a custom config of format 8 with their problems' and rows' entries, the groups of format 11
+  appended; format 11 the algorithm of format 12, and into its custom config the rows of format 12 and the new
+  k-GeomBase entry where its own is the old one, also with its keys in another order, but not where edited; the row
+  entries of the first version of format 11 (R435, R453 and R455 of then) replaced by the built-in entry of the ID or
+  dropped, a user's own entry kept; saved again by the previous version, nothing is added twice)
   and so are the groups and knobs to a saved custom config (whose numbered IDs and row keys get letters; groups
   recognized by ID and problem, also next to a user's group of the same name; a knob whose ID the config has for
   another knob without it, the scenario's knob then with the config's ID; only the group of format 6 to a config of
@@ -1278,11 +1347,23 @@ Unit tests (mocha + tsx) partition each module's input space:
   saved it under the new ID it got; rounded exponents of knob
   regimes and pins become fractions again before format 5; a saved config with problems is used for its valid parts (a
   non-object is ignored); a custom config before format 7 gets the built-in limits where it has none (its own kept);
-  format 10 is loaded as is; a saved `maxDepthUB` of 4 from
+  the group renamed in format 11 (SETH) is renamed in a custom config saved before when it holds the built-in knob L1
+  for CNF-SAT (a user's own group named SETH keeps its name; the old description is replaced, the user's kept), and a
+  saved knob's default note "SETH" becomes the new one (the user's own note kept); format 12 is loaded as is; a saved
+  `maxDepthUB` of 4 from
   formats 2 and 3 becomes 3 (other values and format 4 are kept); the focus mode is restored when valid; the family
   boxes are off before format 10 (whatever was saved) and as saved from format 10 on; the selection is not saved.
 * **statuses**: conflicts as small as $10^{-4}$, and $n^{2-\Omega(1)}$ against $n^2$, are detected; floating-point noise
   is not a conflict; bounds of different powers (conflict or gap by the powers).
+* **bounds of a constant parameter in the exponent** (`paramFamily.test.ts`): value lists (runs, gaps, compact forms);
+  the exponent as a line in the parameter (slopes 1, 2, 1/2, ω/3 with and without ω, intercepts, constants; not on a
+  line, too few points, unusual slopes); on the real sheet k-OV `≥ n^k  ≤ n^k  (k = 2–6, 8)`, k-Clique `≤ n^(ωk/3)` (both
+  bounds with the k-Clique hypothesis), Klee's measure problem `≤ N^(d/2)`, 3-uniform hyperclique `≤ n^k`, Zero-,
+  Min- and Max-Weight k-Clique `≥ n^3  ≤ n^k` (a lower bound that does not grow with $k$), statuses for the first two and
+  Min-Weight $k$-Cycle without the rows from $k$ to $k + 1$ (tight at $k = 3$ only: in the graph `k=3 tight · 4–6 UB`)
+  and for k-AP Detection (with the k-AP hypothesis `k=3 UB · 4–6 tight`), and the primary regime's line for Min-Weight
+  $k$-Cycle with those rows ($n^3$ at every $k$), for problems without such a parameter and for edit distance's alphabet
+  sizes (same exponents).
 * **display precision** (`boundDecimals`): integers stay short, rounding never overstates a bound (1.99915, ω, 4/3),
   search noise below an integer shows as the integer, conflicts and gaps hidden by four decimals get more (only between
   bounds of the same power).
@@ -1324,7 +1405,9 @@ Unit tests (mocha + tsx) partition each module's input space:
 * **theme**: dark or not and the toggle for each theme × system setting (every toggle changes the look; agreeing with
   the system means following it); saved themes restored, invalid ones replaced by `system`.
 * **e2e** (Playwright, optional): the built HTML loads without console errors and without any network request, renders
-  all problems with their default bounds and the initial-settings note (with switched-off knobs as compact rows), no
+  all problems with their default bounds and the initial-settings note (with switched-off knobs as compact rows), the
+  bounds of a constant parameter in the exponent as functions of it or as statuses, the rows from $k$ to $k + 1$ as
+  loops above their nodes (drawn over the other nodes), no
   family boxes until the toggle draws them (and takes them away again), one
   box per problem in the left panel, labels are larger than 2.5 px at "fit" (about 3 px for the 243 problems, depending
   on the layout's seed) and grow when the panels are hidden, a knob
@@ -1376,7 +1459,7 @@ $\max(x_u, x_q)$ (one-dimensional bisection, as in §6.5). Dynamic *sources* wou
   default settings, more with fewer grid points or rounds, or when the objective has several separated maxima). Such
   misses only weaken bounds (§6.3); differences below $10^{-4}$ are reported as tight.
 * Upper-bound derivations pass through at most `maxDepthUB` (default 3) regimes in a row that are not of interest
-  (§6.6); pin a regime to make it one. Lower-bound derivations have no limit except the caps (20 000 steps, 400
+  (§6.6); pin a regime to make it one. Lower-bound derivations have no limit except the caps (20 000 steps, 1000
   regimes per problem).
 * Cycles through `\min` of calls are repeated lap by lap (200 laps per limit), so their limits may be approached only;
   cycles that move to another regime on every lap are followed step by step within the caps. A lower bound is taken to
@@ -1410,5 +1493,28 @@ $\max(x_u, x_q)$ (one-dimensional bisection, as in §6.5). Dynamic *sources* wou
 * Rows that a chain of other trivial rows already gives with the same parameters are left out, so that no trivial
   reduction is stated twice: Negative Triangle Detection → Distance Product (R374 and R376, and R127 with R128) and
   Positive Betweenness Centrality → Betweenness Centrality (R400 and R401). Dropping them changed no bound.
+* The rows R432–R465 (Nov 2026) model their sources as follows. The lopsided triangle problem is looked at only at
+  $d = n^{1/18}$ and $w = n^{71/36}$, where Theorem 1 of Alman and Vassilevska Williams applies; the reduction from Exact
+  Triangle (R453) was taken from the restatement by Karingula and Lovett, as the paper's Section 3 could not be read.
+  Folding Zero-Weight $k$-Clique into Exact Triangle (R458) is tight only when 3 divides $k$ (as R369 for $k$-Clique);
+  for other $k$, trying the one or two leftover vertices first refutes the hypothesis too, which the formula does not
+  say. $k$-GeomBase is listed for $k \ge 4$ only, as Fischer considers it: for $k = 3$ it is GeomBase up to a shift of
+  the lines, and the sheet has no row between the two, as either direction would hold for $k = 3$ only (and the graph
+  would show it as one for every $k$). Dudek et al.'s 4-AP Detection to 3-uniform 4-hyperclique (R434) holds for $k = 4$
+  only; the config restricts it to that value (`requires`), at the owner's request. Without the 3SUM-hard case $k = 3$,
+  the narrowest colour-spanning strip gets its 3SUM lower bound from GeomBase directly, through R39, whose ?? were filled
+  in November 2026 with the natural reduction (Abellanas et al. omit their proof). #Exact Triangle → Exact Triangle
+  (R457) has no formula (no explicit exponent). 3-SAT is not a problem of the sheet: the October 2026 $2^{o(n)}$
+  algorithm for $k$-SAT is not a polynomial exponent, so the engine could not hold it, and the fine-grained reductions
+  from 3-SAT are those from CNF-SAT restricted to width 3; the CNF-SAT hypothesis keeps its knob as the Satisfiability
+  Hypothesis.
+* The rows from $k$ to $k + 1$ (R463–R465: Min-Weight and Zero-Weight $k$-Clique, a new vertex; directed Min-Weight
+  $k$-Cycle, colour coding) carry the cubic lower bounds of $k = 3$ (Minimum Weight Triangle, Exact Triangle) to the
+  larger $k$. The config restricts them to $k = 3, 4, 5$, so that they reach the listed $k \le 6$: unrestricted, every
+  new $k$ would produce the next one, up to the analysis's limit of regimes per problem. The natural $n^{k-o(1)}$ of the
+  cliques are hypotheses of their own (L6, L7, L15), off by default. Row R118 needs an even clique size and is
+  restricted to even $k$, which the bounds carried to $k = 5$ made visible (2.5 strings). Under the $k$-AP hypothesis
+  alone, 3-uniform $k$-hyperclique has a lower bound at $k = 4$ only (R434): a row from $k$ to $k + 1$ would carry $n^4$
+  to $k = 5, 6$ but not to the listed 9, 12, 30 and 300, so the sheet has none.
 * The built-in algorithms (§3.6) come from a quick pass over the literature (about 30 seconds per problem): notes mark
   the randomized ones and those of medium confidence, and a few problems have only a trivial algorithm.
