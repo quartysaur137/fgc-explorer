@@ -237,7 +237,7 @@ identifiers used in their rows' From-time formulas (marked *inferred* in the UI)
 ```jsonc
 {
   "version": 1,
-  "constants": { "omega": { "value": 2.371339, "min": 2, "max": 3, "label": "matrix multiplication exponent",
+  "constants": { "omega": { "value": 2.25, "min": 2, "max": 3, "label": "matrix multiplication exponent",
                             "note": "shown under the slider" } },
   "aliases":   { "Boolean Satisfiabiltiy": "Boolean Satisfiability" },
   "problems": {
@@ -284,18 +284,28 @@ groups say where the starting knobs come from; the UI lists them in the "Initial
 switch that turns all of its knobs that are in the left panel (the same Bound ID for the same problem) on or off at once,
 with one recomputation; the knobs themselves are edited one by one in the left panel. (The first version called
 this section `presets`; a config using that name is still read, with a message asking to rename it.) The built-in groups
-are the **Satisfiability Hypothesis** (SETH as stated for CNF-SAT with $\text{poly}(n)$ clauses, L1; called "SETH" until
-format 11 of the saved data, §7, since a $2^{o(n)}$-time algorithm for $k$-SAT announced in October 2026, a preprint not
-yet refereed, refutes ETH and the $k$-SAT form of SETH, though not this CNF form), the 3SUM and APSP hypotheses and the
-textbook algorithms (on); **SETH ($k$-SAT form)** (L16, off: for every $\varepsilon > 0$ some $k$ makes $k$-SAT need
-$2^{(1-\varepsilon)n}$; the reductions that need a sparsified $k$-CNF formula, with $O(n)$ clauses, start from the
-problem $k$-SAT, which reduces to CNF-SAT, R466, so this form implies the CNF form and not conversely; §13), the
+are the **Satisfiability Hypothesis** (L1: CNF-SAT with $\text{poly}(n)$ clauses needs $2^{c\,n^a}$; at the default
+$c = a = 1$ SETH in its CNF form, called "SETH" until format 11 of the saved data, §7, since the $2^{o(n)}$-time
+algorithms for $k$-SAT announced in October 2026, preprints not yet refereed, refute ETH and the $k$-SAT form of SETH,
+though not this CNF form; with $a < 1$ it follows from SH, below), the 3SUM and APSP hypotheses and the textbook algorithms (on);
+the **Satisfiability Hypothesis ($k$-SAT)** (L16, off; called "SETH ($k$-SAT form)" until format 14, and labelled apart
+from L1's group because group labels must be unique: $k$-SAT needs $2^{c\,n^a}$; at $c = a = 1$ SETH as usually stated,
+for every $\varepsilon > 0$ some $k$ makes $k$-SAT need $2^{(1-\varepsilon)n}$, which the October 2026 algorithms
+refute; with $a < 1$ it follows from the Satisfiability Hypothesis (SH) of Stearns and Hunt, 1990, that CNF-SAT on
+inputs of length $L$ needs $2^{L^{1-o(1)}}$ time, which for each fixed $k \ge 3$ is equivalent to $k$-SAT on $n$
+variables needing $2^{n^{1-o(1)}}$ time (MIT Hardness Group, arXiv:2611.02650, Corollary 2.5; the paper calls this form
+Weak $k$-ETH but recommends the name SH) and which those algorithms do not refute, their exponent
+$n \log\log n/\sqrt{\log n}$ being $n^{1-o(1)}$; the reductions that need a sparsified $k$-CNF formula, with $O(n)$
+clauses, start from the problem $k$-SAT, which reduces to CNF-SAT, R466, so this bound implies L1 at the same $c$ and $a$
+and not conversely; §13), the
 **low-dimension OV hypothesis** (L17, off: OV at $d = c \log n$, which $k$-SAT reduces to with sparsification, R467, and
 which rows R350–R351 need; it implies the OV hypothesis through R468), the **(min,+)-convolution hypothesis** (L18,
 off: $n^{2-o(1)}$, Cygan–Mucha–Węgrzycki–Włodarczyk 2017, which makes the knapsack-type problems quadratic and which the
-2026 (min,+)-product algorithms refute, $n^{1.9982}$ through R198) and the **subexponential $k$-SAT algorithm** of
-October 2026 (U442, off: $2^{o(n)}$ for every constant $k$; an unrefereed preprint; every row from $k$-SAT points away
-from it, so it reaches no other problem); and the OV, Min-Weight $k$-Clique, $k$-Clique and combinatorial BMM hypotheses and the
+2026 (min,+)-product algorithms refute, $n^{1.9982}$ through R198) and the **subexponential $k$-SAT algorithms** of
+October 2026 (U442, off: $2^{o(n)}$ for every constant $k$; unrefereed preprints of Anthropic, Hexagon:2610.00577, and
+OpenAI, "The Exponential Time Hypothesis is false", both counting in $(n+m)^{O(1)} 2^{O(n \log\log n/\sqrt{\log n})}$
+time as arXiv:2611.02650 cites them; every row from $k$-SAT points away from it, so it reaches no other problem); and
+the OV, Min-Weight $k$-Clique, $k$-Clique and combinatorial BMM hypotheses and the
 algorithms of Alman and Vassilevska Williams (arXiv:2610.06783, Oct 2026: 3SUM in $n^{1.9992}$, APSP and (min,+)-product
 in $n^{2.9995}$, Exact Triangle in $n^{2.9983}$, their real-valued versions in $n^{1.998}$ / $n^{2.998}$, Mono
 Convolution in $n^{1.4999}$, and their Theorem 1, Lopsided All-Edges Sparse Triangle in $n^2/d^{0.063}$ at $d =
@@ -361,7 +371,7 @@ itself; a malformed limit is ignored with a warning (Diagnostics).
 ```jsonc
 {
   "version": 1,
-  "constants": { "omega": 2.371339 },
+  "constants": { "omega": 2.25 },
   "knobs": [
     { "id": "L2", "enabled": true, "problem": "3SUM / 3SUM", "kind": "LB", "regime": "n=1, M=poly", "exponent": 2 },
     { "id": "L1", "enabled": true, "problem": "Boolean Satisfiability / CNF-SAT", "kind": "LB",
@@ -528,6 +538,16 @@ secondary source. Conventions:
   slider; the slider's note (`constants.omega.note`) says so and names the knobs. Chan's $O(N^d)$ for Max-Weight
   Rectangle (U359) holds for every constant $d$: its regime now lists $d \le 6$ (it stopped at 4, so $d = 5, 6$ showed
   $N^{11}$ and $N^{13}$ from other bounds).
+* Updated again in November 2026 (format 14): the default ω is $9/4 = 2.25$, from an OpenAI manuscript dated October 2,
+  2026 ("An Upper Bound of 9/4 for the Matrix Multiplication Exponent", released October 6 in the openai/math repository
+  on GitHub; ω over the complex numbers, checked in Lean with its own definition of the exponent, not yet refereed).
+  2.371339 stays the best refereed bound and is in the slider's note; a custom config saved with it as the default gets
+  2.25 (`CONSTANTS_CHANGED_IN`, §7). At 2.25 no problem changes status in the default scenario, with the 2026
+  algorithms, or with every hypothesis on. The rectangular exponents above are still the numbers of the 2024–25 papers
+  (the note says they may no longer be the best): for 4-Clique the app now finds $n^{\omega + 1} = n^{3.25}$ itself, one
+  triangle instance with weights $O(1)$ per vertex (R283, R469), below $\omega(1,1,2) < 3.250035$. And with the
+  k-Clique hypothesis, Triangle Detection at $m = n^{3/2}$ (R106) gets only $n^{2\omega/3} = n^{1.5} = m$, the input
+  size, so that regime is no longer listed.
 
 ### 3.7 The limits of parameters (`constraints`)
 
@@ -787,10 +807,10 @@ too ($x^* = \infty$); a row that would solve the source in polynomial time witho
 
 Facts keep the power of their knob (§2.5), and one fact per (problem, key) is kept, the best: a fact of a larger power
 passes through every reduction a smaller one passes through (a reduction's own time below the smaller is below the
-larger) and gives at least as much, so nothing is lost. With SETH as $2^{0.5\,n^{0.75}}$, CNF-SAT and MAX-CNF-SAT
-(identity, row R284) keep it, and nothing else follows: the split-and-list reductions (to OV, $k$-OV, …) take $2^{n/2}$,
-and the one from $k$-SAT to Subset Sum (row R256; SETH in its $k$-SAT form as $2^{0.5\,n^{0.75}}$ likewise stays on
-$k$-SAT, CNF-SAT and MAX-CNF-SAT) takes $2^{\varepsilon n}$ for a free $\varepsilon > 0$. Its range in the config is
+larger) and gives at least as much, so nothing is lost. With the Satisfiability Hypothesis (L1) as
+$2^{0.5\,n^{0.75}}$, CNF-SAT and MAX-CNF-SAT (identity, row R284) keep it, and nothing else follows: the split-and-list
+reductions (to OV, $k$-OV, …) take $2^{n/2}$, and the one from $k$-SAT to Subset Sum (row R256; the Satisfiability
+Hypothesis for $k$-SAT, L16, as $2^{0.5\,n^{0.75}}$ likewise stays on $k$-SAT, CNF-SAT and MAX-CNF-SAT) takes $2^{\varepsilon n}$ for a free $\varepsilon > 0$. Its range in the config is
 $[10^{-9}, 1]$: at $\varepsilon = 0$, which an earlier config allowed, the reduction does not exist, yet its own time
 would have been polynomial and passed such bounds on (an independent review caught this; at power 1 the bounds are
 continuous in $\varepsilon$ and the endpoint only gave their limit). A free parameter whose range excludes an endpoint
@@ -916,8 +936,8 @@ Per regime:
 | LB only / UB only / none | |
 
 The exponents are compared when both bounds have the same power; otherwise the powers decide: conflict if the UB's is
-smaller (an algorithm in $2^{n^{0.99}}$ against SETH), gap if it is larger (SETH as $2^{0.5\,n^{0.75}}$ against the
-$2^n$ algorithm).
+smaller (an algorithm in $2^{n^{0.99}}$ against SETH, L1 at its default), gap if it is larger (L1 as
+$2^{0.5\,n^{0.75}}$ against the $2^n$ algorithm; likewise L16 at a power $a < 1$ against the $2^{o(n)}$ algorithm U442).
 
 The tolerances are asymmetric because the searches are one-sided (§6.3): an UB below an LB cannot come from search
 error, so the conflict tolerance only absorbs floating-point noise (about $10^{-8}$), and improvements as small as those
@@ -1179,6 +1199,12 @@ reductions first), and are computed when the list is opened.
   panel are on, off or partly on and switches them all at once (§3.3), its description and (expandable) its knobs, and a
   **Restore initial settings** button (replaces knobs, constants and engine settings; sheet edits and pinned regimes are
   kept).
+  The inspector is built again for every new analysis (a switch starts one) and when a section opens or closes. When the
+  selection is the same, the new version stays where the panel (or, in the one-column layout, the page) was scrolled
+  to, the keyboard focus stays on the same control (a group switch keeps it although its label changes), and the open
+  lists of knobs of the initial settings stay open (`rebuildInPlace` in `src/ui/dom.ts`). Before November 2026 a
+  switch moved the panel up: removing the focused switch fires focusout during the rebuild, and the layout read that
+  follows let the browser's scroll anchoring shift the panel by the height of the part already removed.
   *Problem:* signature, the limits of its parameters (§2.3, with their reasons as tooltips), the listed regimes of
   interest (§6.7: in their order, the first marked "in the graph", at most
   12; "show all" adds the others, faded, and "show fewer" goes back) with LB/UB/status (a bound taken from another
@@ -1283,7 +1309,15 @@ compressed texts (`ENTRIES_ADDED_IN`); it changes the entries of CNF-SAT, R106, 
 config still has the old built-in ones (`ENTRIES_CHANGED_IN`), the built-in knobs U14, U273, U288, U304, U307, U359 and
 U417 (`KNOBS_CHANGED_IN`: a saved knob that is still the old built-in bound becomes the new one, keeping its switch and
 a note of the user's own; a custom config's copy likewise; one message lists them) and the default of ω
-(`CONSTANTS_CHANGED_IN`: a custom config with the old 2.371552 gets 2.371339).
+(`CONSTANTS_CHANGED_IN`: a custom config with the old 2.371552 gets 2.371339). Format 14 (November 2026) renames the
+group `SETH (k-SAT form)` `Satisfiability Hypothesis (k-SAT)` (`GROUPS_RENAMED_IN`, as in format 11), changes the notes
+of L1, L16 and U442 (`KNOBS_CHANGED_IN`, where a change of the note alone counts: a saved knob, or a custom config's copy,
+whose note is still the old built-in one gets the new note; one with a note of the user's own, or none, keeps it) and
+the default of ω (`CONSTANTS_CHANGED_IN`: 2.371339 becomes 2.25, §3.6).
+
+The messages that only describe such an upgrade (bounds added or updated, IDs moved) are not shown when the page loads
+while the app is being deployed (`SHOW_UPGRADE_NOTES` in `src/ui/main.ts`, off): every visitor would see them once
+after each update. Problems with saved data (e.g. a saved custom config with errors) are still shown.
 
 ---
 
@@ -1418,7 +1452,7 @@ Unit tests (mocha + tsx) partition each module's input space:
   Knapsack and Unbounded Knapsack have the same bound below $n^2$ (4 and 5 reductions, the second derivation through
   the first one's own), and Superadditivity Testing the lower one of $(\max, +)$ Convolution Upper Bound Testing (3
   and 2 reductions, through row R422); a 3SUM hypothesis of 2.05 makes 3SUM, Exact Weight 3-Star and
-  3-Matching Detection ∞ through a cycle, without hitting any cap; SETH as $2^{0.5\,n^{0.75}}$ is kept by MAX-CNF-SAT,
+  3-Matching Detection ∞ through a cycle, without hitting any cap; L1 as $2^{0.5\,n^{0.75}}$ is kept by MAX-CNF-SAT,
   reaches no other problem, and is tight with an algorithm in $2^{0.5\,n^{0.75}}\,m$. **All hypotheses together with the
   trivial and best known algorithms (§3.6) produce no conflict** (ST-Maximum Flow, Set Intersection and CNF-SAT are
   tight; this caught the rounding of regimes to the nearest value, §6.7), and Valiant's parser and the transitive closure
@@ -1571,7 +1605,7 @@ Unit tests (mocha + tsx) partition each module's input space:
   (off > ancestors & descendants > neighbours > bound derivations), 3SUM's own knobs make it stand alone in its
   derivations, pointing at a box's name or an inspector's reduction ID highlights that problem or reduction in the graph (and
   nothing once the pointer leaves), the light/dark toggle changes the page's colors and a second click restores them,
-  the inspector renders a problem (with a derivation) and a reduction, the help dialog opens, and CNF-SAT's SETH knob
+  the inspector renders a problem (with a derivation) and a reduction, the help dialog opens, and CNF-SAT's Satisfiability Hypothesis knob (L1)
   has a power control (3SUM's has none): set to $2^{0.5\,n^{0.75}}$, its box and MAX-CNF-SAT's label show it. The
   search (the left panel has no field of its own): "U12" leaves one box with U12 marked, Enter selects its problem, the
   left panel's Clear shows every box again and puts the focus in the field; "Williams" leaves the boxes with bounds
@@ -1593,22 +1627,27 @@ Unit tests (mocha + tsx) partition each module's input space:
   (W7, parser); a row marked `lowerOnly` carries lower bounds only, and its explanation says why; tiny free-parameter
   values shown by their size; calls on degenerate instances (a parameter beyond $N^{10^4}$) not evaluated; the ranking
   by a regime's own status first.
-* **integration:** k-Clique at each $k$ ($\omega$, 3.250035, 4.085552, $2\omega$: U14 only where 3 divides $k$); SETH
-  in its $k$-SAT form gives Subset Sum, Bicriteria s,t-Path (tight with Joksch at $L = C = n$ and $n^3$), the low-dimension
-  OV problems and approximate attention, and the CNF form gives none of them; R106 gives Triangle Listing no upper
-  bound (a gap $[n^2, n^{2.2034}]$ at $m = n^{1.5}$); BC gets no APSP algorithm (R169, R170 skipped); the 2026
+* **integration:** k-Clique at each $k$ ($\omega$, $\min(3.250035, \omega + 1)$, 4.085552, $2\omega$: U14 only where 3
+  divides $k$; at ω = 9/4 the bound $n^{\omega+1}$ beats the typed $\omega(1,1,2)$ at $k = 4$); the Satisfiability
+  Hypothesis for $k$-SAT at its default (SETH's $k$-SAT form) gives Subset Sum, Bicriteria s,t-Path (tight with Joksch at
+  $L = C = n$ and $n^3$), the low-dimension OV problems and approximate attention, and L1 (the CNF form) gives none of
+  them; R106 gives Triangle Listing no upper bound (a gap $[n^2, n^{2.1923}]$ at $m = n^{1.5}$; $n^{2.2034}$ at ω =
+  2.371339) nor Triangle Detection, checked at ω = 2.371339 (at 9/4 the k-Clique hypothesis gives it only the input
+  size there, and the regime is not listed); BC gets no APSP algorithm (R169, R170 skipped); the 2026
   algorithms refute the Zero-Weight and Min-Weight $k$-Clique hypotheses at every $k = 3, \dots, 6$ (R458/R371 folding at
   $k = 3, 6$; R469/R470 one instance per vertex at $k = 4, 5$: $n$ times the bound at $k - 1$); the (min,+)-convolution
   hypothesis makes the knapsack-type problems tight and conflicts with the 2026 algorithms; no two trivial rows for one
   pair of problems, except a problem's rows to itself with different formulas (R463 and R469).
 * **model / state / CSV:** `lowerOnly` validated; knob IDs that are not whole numbers or have the wrong letter
   replaced; one bad `disabledRows` entry dropped, not the list; scenario constants unknown or out of range dropped
-  (`checkScenarioConstants`); a constant's note kept; format 13's migrations (groups and entries added, knobs and
-  entries changed where still built-in, ω's old default, each reported once); bounds CSV headers in any case, a Bound
+  (`checkScenarioConstants`); a constant's note kept; format 13's and 14's migrations (groups and entries added, a
+  group renamed, knobs and entries changed where still built-in, also by their note alone, ω's old default, each
+  reported once); bounds CSV headers in any case, a Bound
   ID of the wrong letter given a new one, a row with an open quote not read; `fitPanelSizes` (saved sizes from a larger
   window keep the graph visible).
 * **e2e:** the config's export loaded as a scenario, and the scenario's as a config, are refused and change nothing;
-  a group switch turns its group's knobs off and on again; a settings change keeps the section open and the panel's
+  a group switch turns its group's knobs off and on again, and one far down the list keeps the inspector's scroll
+  position, the focus and an open list of knobs (both ways); a settings change keeps the section open and the panel's
   scroll position, and a value out of range is refused with a message while the field shows the current value; ω reads
   "2,5" as 2.5 and refuses 1.5; n^c and ƒ(n) give U5 its formula back; the Help dialog keeps the focus and gives it
   back; a narrow window puts the inspector after the graph, and a saved panel size too large for the window leaves the
@@ -1708,15 +1747,17 @@ $\max(x_u, x_q)$ (one-dimensional bisection, as in §6.5). Dynamic *sources* wou
   (R457) has no formula (no explicit exponent).
 * $k$-SAT and CNF-SAT are separate problems since November 2026. A lower bound for CNF-SAT says nothing about its
   special case $k$-SAT, so the reductions that need a $k$-CNF formula with $O(n)$ clauses (sparsification: R214–R219,
-  R231, R248–R250, R256, R344, and R467 to Low-Dimension OV) start from $k$-SAT, which reduces to CNF-SAT (R466); SETH
-  in its $k$-SAT form (L16) implies the CNF form (L1), not conversely. Earlier versions let those rows start from
-  CNF-SAT, so the Satisfiability Hypothesis (the CNF form, with $\text{poly}(n)$ clauses) gave Subset Sum, 0-1
+  R231, R248–R250, R256, R344, and R467 to Low-Dimension OV) start from $k$-SAT, which reduces to CNF-SAT (R466); the
+  Satisfiability Hypothesis for $k$-SAT (L16; SETH's $k$-SAT form at its default) implies L1 at the same $c$ and $a$,
+  not conversely. Earlier versions let those rows start from CNF-SAT, so L1 (SETH's CNF form, with $\text{poly}(n)$
+  clauses) gave Subset Sum, 0-1
   Knapsack, Bicriteria s,t-Path, Approximate Bichromatic Hamming Close Pair and Approximate Attention lower bounds it
   does not imply (and an earlier version of this section argued that reductions from 3-SAT are those from CNF-SAT
   restricted to width 3, which runs the wrong way for lower bounds; found by an independent review). The October 2026
-  $2^{o(n)}$ algorithm for $k$-SAT (U442, off) is a rate of exponent 0 that the engine holds ($2^{o(n)}$); it refutes the
-  $k$-SAT form and reaches no other problem, since every row from $k$-SAT points away from it. 3-SAT itself is not a
-  problem of the sheet.
+  $2^{o(n)}$ algorithm for $k$-SAT (U442, off) is a rate of exponent 0 that the engine holds ($2^{o(n)}$); it conflicts
+  with L16 at $a = 1$ (SETH's $k$-SAT form), not with L16 at a power $a < 1$ (implied by SH, the Satisfiability
+  Hypothesis of Stearns and Hunt, which it does not refute; arXiv:2611.02650), where $k$-SAT shows a gap, and it reaches
+  no other problem, since every row from $k$-SAT points away from it. 3-SAT itself is not a problem of the sheet.
 * The rows from $k$ to $k + 1$ (R463–R465: Min-Weight and Zero-Weight $k$-Clique, a new vertex; directed Min-Weight
   $k$-Cycle, colour coding) carry the cubic lower bounds of $k = 3$ (Minimum Weight Triangle, Exact Triangle) to the
   larger $k$. The config restricts them to $k = 3, 4, 5$, so that they reach the listed $k \le 6$: unrestricted, every
