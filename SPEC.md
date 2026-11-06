@@ -97,6 +97,23 @@ $q \cdot s$; they now have 73 and 88, all within the limits, and no bound shown 
 regime was $\alpha = n$ at $m = n^{1.5}$; it is $\alpha = n^{3/4}$, still tight at $n^2$). Limits on log-dependent
 parameters are not allowed (they count only through $\log M$).
 
+**Bounds between a problem's own regimes** (`Regime.contains`; `throughContainment` in `src/engine/analysis.ts`). For
+the same reason, a regime $A$ lies inside a regime $B$ of the same problem when both are measured by the same parameter
+on the same scale and every parameter grows at most as fast in $A$ as in $B$. Per parameter: a constant with a value is
+below an unspecified constant (`c?`), which is below the polylogarithmic class (`L`), below $N^{o(1)}$ (`S`), below
+$N^x$, ordered by $x$; for log-dependent parameters `C` < `L` < `P`. Two different constant values are not compared,
+since not every parameter is a size (a bound for $k = 3$ says nothing about $k = 4$). $A$'s instances are then among
+$B$'s, so a lower bound of $A$ holds in $B$ and an upper bound of $B$ holds in $A$: each regime of interest (§6.7) of a
+static problem takes the best lower bound of its regimes of interest inside it and the best upper bound of those around
+it, and its status is computed from them (the inspector marks such a bound with † and names the regime it comes from).
+So Diameter 2 vs 3 at $m = n^2$, which had only its $n^{\omega}$ upper bound, takes the $n^{2-o(1)}$ of sparse graphs
+($m = n$) and shows a gap, and Local Alignment at $\sigma = n^{0.5}$ and Edit Distance at an unspecified constant
+alphabet take the quadratic lower bounds of their constant alphabets and are tight; on the sheet with the initial
+settings 70 of the 556 listed regimes take a bound from another one. Rescaled embeddings ($A$'s instances at size $N$ as
+instances of $B$ measured by another parameter, at size $N^{1/x}$) are not used. (Found by an independent review: before,
+bounds were matched by exact keys only, and a problem's primary regime could move to a weaker regime than its bounds
+implied.)
+
 ### 2.4 Bounds (facts)
 
 * **LB fact** $(P, \rho, L)$: for every $\varepsilon > 0$, $P$ has no algorithm running in time $N^{L-\varepsilon}$ on
@@ -220,7 +237,8 @@ identifiers used in their rows' From-time formulas (marked *inferred* in the UI)
 ```jsonc
 {
   "version": 1,
-  "constants": { "omega": { "value": 2.371552, "min": 2, "max": 3, "label": "matrix multiplication exponent" } },
+  "constants": { "omega": { "value": 2.371339, "min": 2, "max": 3, "label": "matrix multiplication exponent",
+                            "note": "shown under the slider" } },
   "aliases":   { "Boolean Satisfiabiltiy": "Boolean Satisfiability" },
   "problems": {
     "Boolean Satisfiability / CNF-SAT": {
@@ -240,6 +258,7 @@ identifiers used in their rows' From-time formulas (marked *inferred* in the UI)
     "R303": { "free": [ { "name": "delta", "type": "real", "min": 0, "max": 1 },
                         { "name": "d", "type": "size", "base": "n", "min": "0", "max": "(1-\\delta)/2" } ] },
     "R316": { "from": "O(c \\cdot T(n, m/t))", "free": [ ... ], "note": "a sound bound for the sheet's sum over color classes" },
+    "R106": { "requires": "m=3/2", "lowerOnly": true },
     "R90":  { "skip": "reason shown in the UI" }
   },
   "initialKnobs": [
@@ -253,7 +272,7 @@ identifiers used in their rows' From-time formulas (marked *inferred* in the UI)
 `initialKnobs` is the scenario a first visit starts with (and **Restore initial settings** returns to): every knob of
 every group, switched on unless its group has `"enabled": false`, with the group's label as its note unless the knob has
 its own `note`. Each knob has a **Bound ID** `id`: `L1`, `L2`, … for lower bounds and `U1`, `U2`, … for upper bounds,
-numbered separately (the built-in ones are L1–L15 and U1–U441); keep them when editing and give new knobs the next free
+numbered separately (the built-in ones are L1–L18 and U1–U442); keep them when editing and give new knobs the next free
 one of their kind, since the bounds CSV (§3.5) matches rows to knobs by them. A missing id gets the next free one of its
 kind; a repeated or invalid one is reported and replaced the same way; other text is kept. A bare number is a Bound ID of
 the versions before the letters, which numbered all knobs together (the initial ones 1–33, the user's after them), and
@@ -261,13 +280,22 @@ is converted by number and kind alone, so that a knob gets the same ID wherever 
 bound n becomes Ln (the initial ones L1–L9), an upper bound 10–33 U1–U24 (the IDs those initial knobs have now) and
 one from 34 up U(n + 334) (after the built-in U367 of then; the knobs added since have U368–U441 and L10–L15, and a
 saved knob of the user's with one of those IDs moves to another one, see §7); an upper bound below 10 gets a new ID. The
-groups are only a description of where the starting knobs come from; the UI shows them in the "Initial settings" note
-(§7) but has no per-group toggles, so each knob is edited on its own. (The first version called
+groups say where the starting knobs come from; the UI lists them in the "Initial settings" note (§7), each with a
+switch that turns all of its knobs that are in the left panel (the same Bound ID for the same problem) on or off at once,
+with one recomputation; the knobs themselves are edited one by one in the left panel. (The first version called
 this section `presets`; a config using that name is still read, with a message asking to rename it.) The built-in groups
 are the **Satisfiability Hypothesis** (SETH as stated for CNF-SAT with $\text{poly}(n)$ clauses, L1; called "SETH" until
 format 11 of the saved data, §7, since a $2^{o(n)}$-time algorithm for $k$-SAT announced in October 2026, a preprint not
 yet refereed, refutes ETH and the $k$-SAT form of SETH, though not this CNF form), the 3SUM and APSP hypotheses and the
-textbook algorithms (on), and the OV, Min-Weight $k$-Clique, $k$-Clique and combinatorial BMM hypotheses and the
+textbook algorithms (on); **SETH ($k$-SAT form)** (L16, off: for every $\varepsilon > 0$ some $k$ makes $k$-SAT need
+$2^{(1-\varepsilon)n}$; the reductions that need a sparsified $k$-CNF formula, with $O(n)$ clauses, start from the
+problem $k$-SAT, which reduces to CNF-SAT, R466, so this form implies the CNF form and not conversely; §13), the
+**low-dimension OV hypothesis** (L17, off: OV at $d = c \log n$, which $k$-SAT reduces to with sparsification, R467, and
+which rows R350–R351 need; it implies the OV hypothesis through R468), the **(min,+)-convolution hypothesis** (L18,
+off: $n^{2-o(1)}$, Cygan–Mucha–Węgrzycki–Włodarczyk 2017, which makes the knapsack-type problems quadratic and which the
+2026 (min,+)-product algorithms refute, $n^{1.9982}$ through R198) and the **subexponential $k$-SAT algorithm** of
+October 2026 (U442, off: $2^{o(n)}$ for every constant $k$; an unrefereed preprint; every row from $k$-SAT points away
+from it, so it reaches no other problem); and the OV, Min-Weight $k$-Clique, $k$-Clique and combinatorial BMM hypotheses and the
 algorithms of Alman and Vassilevska Williams (arXiv:2610.06783, Oct 2026: 3SUM in $n^{1.9992}$, APSP and (min,+)-product
 in $n^{2.9995}$, Exact Triangle in $n^{2.9983}$, their real-valued versions in $n^{1.998}$ / $n^{2.998}$, Mono
 Convolution in $n^{1.4999}$, and their Theorem 1, Lopsided All-Edges Sparse Triangle in $n^2/d^{0.063}$ at $d =
@@ -284,9 +312,10 @@ is $N^{k/(2\lceil k/3 \rceil + 1)}$, which tends to Chan's $N^{1.5}$ only as $k$
 added with rows R432–R465: the **$k$-AP hypothesis** ($k$-AP Detection needs $N^{2-o(1)}$ for $k = 4, 5, 6$, L14; Fischer
 2026 proposes it in place of the 3SUM hypothesis for the geometric problems, and derives their lower bounds from it
 through $k$-GeomBase, rows R432–R444) and the **Zero-Weight $k$-Clique hypothesis** ($n^{k-o(1)}$ for $k = 3, \dots, 6$
-with weights $n^{O(k)}$, L15; the 2026 Exact Triangle algorithm refutes it for every $k$, which the app shows at $k = 3$
-and 6, where the folding of row R458 is tight; without it, the 3SUM and APSP hypotheses give $n^{3-o(1)}$ for every $k$
-through Exact Triangle and the row from $k$ to $k + 1$, R464). Two more groups (on) give upper
+with weights $n^{O(k)}$, L15; the 2026 Exact Triangle algorithm refutes it for every $k$: at $k = 3$ and 6 through the
+folding of row R458, which is tight there, and at $k = 4, 5$ through R470, one $(k-1)$-clique instance per vertex, which
+costs a factor $n$ (R469 does the same for Min-Weight $k$-Clique); without it, the 3SUM and APSP hypotheses give
+$n^{3-o(1)}$ for every $k$ through Exact Triangle and the row from $k$ to $k + 1$, R464). Two more groups (on) give upper
 bounds for most static problems of the sheet (§3.6): **Trivial algorithms** (198 knobs: brute force and textbook
 algorithms following from the definitions) and **Best known algorithms** (214 knobs: the fastest algorithms found in the
 literature, with sources); **Non-combinatorial algorithms** (off) holds Valiant's CFG parser and the transitive closure
@@ -297,6 +326,17 @@ Row annotations are keyed by Reduction ID (in canonical form: a key `"106"` is r
 error). The optional `match` records the problems the annotation was written for; if
 the row with that ID connects other problems (a renumbered or different sheet), the annotation is ignored with a
 warning instead of being misapplied. The in-app row editor adds `match` automatically.
+
+`lowerOnly: true` marks a row that holds only on special instances of its target, which its Restrictions describe in
+prose: hardness of those instances is hardness of the target, so the row carries lower bounds, but an algorithm for the
+target on all instances is not what the row needs, so the upper-bound search does not use it (§6.6) and its explanation
+says why ("not applicable: it holds only on special instances of its target"); the inspector and the Reductions table
+label it "lower bounds only". The built-in config sets it on R106 (Triangle Listing to 4-Cycle Listing,
+Abboud–Bringmann–Fischer 2023, for $\Theta(\sqrt n)$-regular graphs with few triangles; its `requires: "m=3/2"` stays for
+the lower-bound direction). R169 and R170 (Betweenness Centrality to APSP, which need unique shortest paths) are skipped
+instead: their lower-bound direction adds nothing to APSP, and with ties the distances alone do not give betweenness
+centrality (the fastest known exact algorithm is about cubic). Other rows whose Restrictions limit them to special
+instances can be flagged the same way as they turn up; the app does not read Restrictions.
 
 Free-parameter types:
 
@@ -321,7 +361,7 @@ itself; a malformed limit is ignored with a warning (Diagnostics).
 ```jsonc
 {
   "version": 1,
-  "constants": { "omega": 2.371552 },
+  "constants": { "omega": 2.371339 },
   "knobs": [
     { "id": "L2", "enabled": true, "problem": "3SUM / 3SUM", "kind": "LB", "regime": "n=1, M=poly", "exponent": 2 },
     { "id": "L1", "enabled": true, "problem": "Boolean Satisfiability / CNF-SAT", "kind": "LB",
@@ -330,9 +370,23 @@ itself; a malformed limit is ignored with a warning (Diagnostics).
   ],
   "problems": ["Orthogonal Vectors / OV", "3SUM / 3SUM", "String Similarity / Edit Distance"],
   "settings": { "maxDepthUB": 3, "gridPoints": 9, "refineRounds": 20,
-                "unknownRT": "assume-negligible", "useRandomized": true, "disabledRows": [] }
+                "unknownRT": "assume-negligible", "useRandomized": true, "disabledRows": [] },
+  "pinned": { "Orthogonal Vectors / OV": ["n=1, d=1"] }
 }
 ```
+
+* `pinned` (optional; written by Scenario ▸ Export since November 2026): the regimes pinned in the inspector, per
+  problem, so that a shared file shows the same picture. Loading a file with it replaces the current pins; a file
+  without it keeps them. Entries for unknown or dynamic problems and specs that are not regimes of their problem are
+  dropped with a message.
+* Loading checks the file first: JSON that is not a scenario (no `knobs` list; an engine config is recognized by
+  `initialKnobs`, `problems` or `rows` and pointed to Config ▸ Load) is refused and nothing changes. A scenario with
+  problems asks before it replaces the current one, and the message after loading offers **Undo** (Config ▸ Load
+  likewise). The values of
+  constants that the config does not have, or that lie outside their range, are dropped (`checkScenarioConstants`), as
+  are knob IDs that are not whole numbers or Bound IDs of the wrong letter (a new ID is given), and `disabledRows`
+  entries that are not text (the others are kept); each is reported. The bounds that are then unusable (an unknown
+  problem, a bad regime or formula) are counted in the message.
 
 * `id` is the knob's Bound ID (§3.3): `L…`/`U…` (in either case) or other text kept as given, a bare number of earlier
   versions converted as in §3.3, and a missing or repeated one (reported) or an upper bound numbered below 10 given the
@@ -357,8 +411,11 @@ itself; a malformed limit is ignored with a warning (Diagnostics).
   within 2e-6 (regimes round them up, §6.7); `log`, `polylog` and `subpoly` are upper bounds (a constant satisfies
   them: an algorithm for polylogarithmic weights also works for constant ones); `poly` for a log-dependent parameter
   needs a polynomial one. Row `requires` (§3.3) read the same way.
-* `settings`: `maxDepthUB` (0–12, default 3; "UB detours" in the app) bounds how many regimes in a row that are not of
-  interest an upper-bound derivation passes through (§6.6); derivations have no other length limit. `gridPoints` and
+* `settings`: `maxDepthUB` (0–5, default 3; "UB detours" in the app) bounds how many regimes in a row that are not of
+  interest an upper-bound derivation passes through (§6.6); derivations have no other length limit. (Up to November
+  2026 it went to 12; at 7 or 8 the search met more than 60 000 regimes, where it stops expanding, and bounds then
+  depended on the order of the queries: ST-Maximum Flow at $m = n^{4/3}$ got $n^{3.333}$ instead of $n^{3.162}$. A saved
+  or loaded value above 5 becomes 5, with a message.) `gridPoints` (2–41) and
   `refineRounds` control the free-parameter search (§6.3), `unknownRT` the policy for rows without a Reduction Runtime
   formula (§2.6), `useRandomized` and `disabledRows` which rows are used. Earlier versions also had `maxHopsLB`, a
   length limit for lower-bound derivations: it is ignored. (Before format 4 of the saved data, `maxDepthUB` limited
@@ -378,15 +435,16 @@ growth := number | number '/' number      polynomial exponent (n=1, m=2, m=4/3)
 ### 3.5 Bounds CSV (hypotheses and algorithms; `src/model/boundsCsv.ts`)
 
 The knobs can also be kept in a spreadsheet, one bound per row, imported into the left panel and exported from it.
-As for the sheet, columns are found by header name (exact, surrounding spaces ignored; any order; extra columns are
-ignored), the file is comma-separated UTF-8 with standard quoting, and blank rows are skipped. The boxes (§3.4) follow
+As for the sheet, columns are found by header name (in any case, surrounding spaces ignored; any order; extra columns
+are ignored), the file is comma-separated UTF-8 with standard quoting, and blank rows are skipped; a quote left open
+(the rest of the file would be one cell) is an error at its line, and the rows before it are read. The boxes (§3.4) follow
 the order in which problems first appear, and a row with neither `Upper or Lower` nor `Runtime` only lists its problem
 (a box without bounds; its other cells are ignored, with a warning if any is filled).
 
 | column | required | meaning |
 |---|---|---|
 | `Problem`, `Variation` | yes | the problem (family and variation; case-insensitive, config aliases apply; `Problem` blank for a problem without a family) |
-| `Bound ID` | yes | the knob's id: `L1`, `L2`, … for lower bounds, `U1`, `U2`, … for upper bounds (other text is accepted; letters in either case): an import in "add" mode replaces the knob with the same id. A blank or repeated one gets the next free one of its kind after all in the file, the current knobs and the initial settings (warning). A bare number is a Bound ID of the versions before the letters, converted as in §3.3 (1–9 → L1–L9, 10–33 → U1–U24, a lower bound n → Ln, an upper bound from 34 → U(n + 334)); an upper bound below 10 gets a new ID (warning) |
+| `Bound ID` | yes | the knob's id: `L1`, `L2`, … for lower bounds, `U1`, `U2`, … for upper bounds (other text is accepted; letters in either case): an import in "add" mode replaces the knob with the same id. A blank or repeated one, or one whose letter is not that of its kind (`U17` on a `Lower` row, which would replace the algorithm U17 by a hypothesis), gets the next free one of its kind after all in the file, the current knobs and the initial settings (warning). A bare number is a Bound ID of the versions before the letters, converted as in §3.3 (1–9 → L1–L9, 10–33 → U1–U24, a lower bound n → Ln, an upper bound from 34 → U(n + 334)); an upper bound below 10 gets a new ID (warning) |
 | `Upper or Lower` | yes | `Upper` (algorithm) or `Lower` (hypothesis); also `UB`/`LB`, `upper bound`/`lower bound`, `algorithm`/`hypothesis`, any case |
 | `Runtime` | yes | a plain number is an **exponent** of the regime's main parameter N (a slider; e.g. `2`, or `1` for CNF-SAT, whose N is $2^n$); anything else is a LaTeX runtime in the problem's parameters and the constants, with or without `$...$` (`n^2 d`, `2^n \cdot m`, `\min(n^{\omega}, m^{2\omega/(\omega+1)})`, `2^{0.5 n^{0.75}}`). A lower bound may be written `\Omega(...)` or `n^{2-o(1)}` |
 | `Power` | no | with a plain number in `Runtime`: its power $a$ (§2.2; empty: 1), e.g. `0.75` with `0.5` for $2^{0.5\,n^{0.75}}$; an error with a formula |
@@ -405,7 +463,7 @@ appended; the file's new problems get boxes after the current ones). Constants a
 **Export** writes the boxes in order, each box's knobs in a row each (an empty box as a row with only its problem), in
 the same format (formulas in `$...$`, exponents as numbers, all eight columns, and `Power` after `Runtime` when a knob
 has a power other than 1); reading it back gives the same boxes and knobs. The initial knobs keep their config ids
-(L1–L15, U1–U440), so their rows are grouped by problem rather than sorted by id; exporting right after "Restore initial
+(L1–L18, U1–U442), so their rows are grouped by problem rather than sorted by id; exporting right after "Restore initial
 settings" gives exactly `data/initial-bounds.csv`, the sample file (regenerate it with `npm run bounds-sample` after
 changing `initialKnobs`; a test fails while it is out of date). Knobs added in the app also get the next free ID of
 their kind, and each knob shows its Bound ID (`U7`).
@@ -457,9 +515,19 @@ secondary source. Conventions:
   fixes its free parameter $d$ there and optimizes the number of groups $g$.
 * Chan's $O(N^{d/2})$ for Weighted Depth holds for every constant $d \ge 3$: U361 lists $d \le 4$, and U441 (added with
   rows R463–R465) $d = 5, 6$, which the cubic lower bound of Max-Weight $k$-Clique (R463, R367) reaches through R277.
-* Known caveat about an older knob: `Known algorithms`' $k$-Clique bound $n^{\omega k/3}$ is achieved for $k$ divisible
-  by 3 only; for $k = 4, 5$ the best known exponents are $\omega(1,1,2) < 3.250035$ and $\omega(1,2,2) < 4.085552$
-  (`Best known algorithms`), so that knob is optimistic there.
+* `Known algorithms`' $k$-Clique bound $n^{\omega k/3}$ (U14, Nešetřil–Poljak) holds when 3 divides $k$; since November
+  2026 its regime is `k=const:[3,6]`. Before, it applied at every $k$ and beat the correct bounds for $k = 4, 5$,
+  $\omega(1,1,2) < 3.250035$ and $\omega(1,2,2) < 4.085552$ (U341, U342), so that k-Clique showed $n^{3.16207}$ and
+  $n^{3.952587}$ there, tight with the k-Clique hypothesis (found by an independent review).
+* Updated in November 2026: ω is 2.371339 (Alman, Duan, Vassilevska Williams, Xu, Xu, Zhou, SODA 2025;
+  arXiv:2404.16349), was 2.371552 (SODA 2024); the review that prompted this also cites a 2026 preprint with 2.371177
+  (arXiv:2608.16884), not checked here, so the published bound is used. The same paper
+  gives $\mu < 0.5275$, so the small-weight APSP algorithms and their consequences (U273, U304, U307, U417: Zwick's
+  $n^{2+\mu}$) and the minimum-witness product (U288, Czumaj–Kowaluk–Lingas, the same exponent) are $n^{2.5275}$ (were
+  2.5277, and 2.5286 for U288). These rectangular exponents are numbers in the formulas, so they do not follow the ω
+  slider; the slider's note (`constants.omega.note`) says so and names the knobs. Chan's $O(N^d)$ for Max-Weight
+  Rectangle (U359) holds for every constant $d$: its regime now lists $d \le 6$ (it stopped at 4, so $d = 5, 6$ showed
+  $N^{11}$ and $N^{13}$ from other bounds).
 
 ### 3.7 The limits of parameters (`constraints`)
 
@@ -626,6 +694,13 @@ This assumes what `timeType: "poly"` says: the target is solvable in polynomial 
 it, e.g. a knob $n^{\log n}$, is then just a weak upper bound; a quasi-polynomial lower bound contradicts the
 assumption).
 
+A call is not evaluated at all (the evaluation fails, so that free-parameter value is dropped) when a parameter of the
+produced instance would grow faster than $N^{10^4}$ (`MAX_REGIME_EXPONENT`): the instance then barely grows (its
+normalizer is $N^{s}$ for a tiny $s$), and bounds there have lost their precision in floating point. On the sheet this
+happens only at the end of a free parameter's range: row R344 at $\beta = 1$ gives a Bicriteria s,t-Path instance with
+$2^{\varepsilon n}$ vertices ($\varepsilon = 10^{-12}$) and budgets $N^{10^{12}}$, whose bounds came out about 1000 apart
+(found by an independent review). The largest exponent of any other regime met, with every group on, is below 40.
+
 ### 6.3 Free parameters (`src/engine/freeparams.ts`)
 
 The grid is the Cartesian product of each parameter's grid, capped at 400 points (the per-parameter resolution is
@@ -643,7 +718,14 @@ time of the propagation; with it, no bound of the sheet differs by more than $10
 give, and the analysis is faster than before the limits.)
 For UBs, refinement likewise requires two grid points whose calls land in the same target regimes. When a refinement
 step moves a parameter, later parameters whose ranges depend on it (e.g. $b \in [0, 1-a]$) are clamped into their new
-ranges.
+ranges. The first step of the refinement is the spacing of the grid actually made: range / (values − 1), with the values
+per parameter reduced as for the cap. (Before November 2026 it used the `gridPoints` asked for, so with more than 20
+points and two continuous parameters the steps were too small to reach the best point between two grid values: at 41
+points Lopsided All-Edges Sparse Triangle dropped from $n^2$ to $n^{1.99923}$, and about ten problems downstream with
+it; found by an independent review.)
+
+The inspector shows free-parameter values with four decimals, except values below $5 \cdot 10^{-5}$, which show by
+their size (`epsilon = 1e-12`, not `0`: rows R256 and R344 need $\varepsilon > 0$).
 
 Optima at a *blocked boundary* are common (e.g. row R192: the LB tends to 2 as $B_{\text{med}} \to 1$, but at
 $B_{\text{med}} = 1$ the reduction runtime equals the lower bound). Refinement approaches such suprema to about
@@ -707,7 +789,8 @@ Facts keep the power of their knob (§2.5), and one fact per (problem, key) is k
 passes through every reduction a smaller one passes through (a reduction's own time below the smaller is below the
 larger) and gives at least as much, so nothing is lost. With SETH as $2^{0.5\,n^{0.75}}$, CNF-SAT and MAX-CNF-SAT
 (identity, row R284) keep it, and nothing else follows: the split-and-list reductions (to OV, $k$-OV, …) take $2^{n/2}$,
-and the one to Subset Sum (row R256) takes $2^{\varepsilon n}$ for a free $\varepsilon > 0$. Its range in the config is
+and the one from $k$-SAT to Subset Sum (row R256; SETH in its $k$-SAT form as $2^{0.5\,n^{0.75}}$ likewise stays on
+$k$-SAT, CNF-SAT and MAX-CNF-SAT) takes $2^{\varepsilon n}$ for a free $\varepsilon > 0$. Its range in the config is
 $[10^{-9}, 1]$: at $\varepsilon = 0$, which an earlier config allowed, the reduction does not exist, yet its own time
 would have been polynomial and passed such bounds on (an independent review caught this; at power 1 the bounds are
 continuous in $\varepsilon$ and the endpoint only gave their limit). A free parameter whose range excludes an endpoint
@@ -733,7 +816,8 @@ e.g. while it was postponed, are solved again), and is solved again if that chan
 only improve, so the fixpoint reached is the same whatever the order (the order only decides between derivations that
 are equal in exponent and reductions).
 
-A node's **candidates** are the usable rows from its problem whose `requires` hold, at each grid point θ, prepared
+A node's **candidates** are the usable rows from its problem whose `requires` hold (not those marked `lowerOnly`,
+§3.3), at each grid point θ, prepared
 once (with their target regimes and the *optimistic* value: the rate of max(RT, From-time with every call of rate
 zero)). They are
 tried in order of their optimistic values (rows by their best candidate, then sheet order; the knobs first), each row
@@ -766,7 +850,10 @@ every analysis that reuses the solver (a new one starts beyond 20 000 nodes). Wh
 lower bound shown with its full search can have a better bound than the budget-limited node of that regime inside
 another problem's derivation; the inspector then notes the better one ("its best: …"); on the sheet this does not
 happen with the default budget. Nodes beyond 60 000 are not searched (a message says so; never reached on the sheet:
-about 3 600 nodes).
+about 3 600 nodes). Since that limit makes bounds depend on the order of the search, the budget is at most 5: at 7 or 8
+the limit was reached and bounds got worse, not better (ST-Maximum Flow at $m = n^{4/3}$: $n^{3.333}$ instead of
+$n^{3.162}$; found by an independent review). When any search limit is reached, the status line says so in the header
+("a search limit was reached, some bounds may be weaker"), not only in Diagnostics.
 
 UB knobs are evaluated by substituting the regime's growths into the knob formula (its rate: `2^{0.5 n^{0.75}} \cdot m`
 at CNF-SAT's regime is power 0.75, exponent 0.5); an exponent knob has the power it is given. Derivations may need no
@@ -805,11 +892,20 @@ and gave APSP with real weights an upper bound $4.8 \cdot 10^{-7}$ below $1 + \o
 $N^{0.000001}$.)
 
 For each problem, the **regimes of interest** are its configured regimes, the regimes of its LB facts and of its
-knobs, and regimes pinned in the inspector. The UB is computed at each of them, except at LB regimes beyond the first 12
-per problem (the nicest first, see below: `lbRegimeKey`; some trade-off rows produce hundreds): those are computed when
-opened in the inspector.
+knobs, and regimes pinned in the inspector. The UB is computed at each of them (static problems), so that a conflict
+shows wherever there is one. The app computes them in two phases (`analyze(…, { complete: false })`, then
+`completeAnalysis`): first at the configured, knob and pinned regimes and at the nicest 12 LB regimes per problem
+(`MAX_UB_REGIMES_FIRST`; `lbRegimeKey`, below), which the views show at once, then at the other LB regimes (some
+trade-off rows produce hundreds) in slices of about 30 ms, the page staying responsive between them, with "checking
+the other regimes…" in the
+status line; the views update when it is done. (Before November 2026 the others had no upper bound until opened in the
+inspector, so a conflict there stayed hidden: with the 2026 algorithms, Set Disjointness at $U = n$,
+$N = n^{17.999857}$, $s = n$, $q = n^{35.499731}$ has lower bound $n^{35.9997}$ through 3SUM and upper bound
+$n^{35.9367}$; found by an independent review.) Tests and scripts use complete analyses (the default).
 The upper-bound search starts from the configured, pinned and UB-knob regimes (§6.6); the others (of lower bounds or
-of their knobs only) get their upper bounds from the overlay.
+of their knobs only) get their upper bounds from the overlay. Each regime then takes the bounds of the problem's other
+regimes of interest that carry over to it (§2.3: lower bounds from the regimes inside it, upper bounds from those
+around it) before its status is computed.
 Per regime:
 
 | status | condition |
@@ -840,10 +936,11 @@ problem's status is its status. When it fixes a constant parameter in the expone
 listed regimes that differ from it only in that parameter's value, which changes the bounds), the label,
 the box and the table show the bounds as functions of the parameter instead (`src/ui/paramFamily.ts`): the bound's
 exponents at the listed values (three at least) are one line $a k + b$ whose coefficients are simple fractions, or
-such fractions of ω (k-OV under SETH: `≥ n^k  ≤ n^k  (k = 2–6, 8)`; k-Clique: `≤ n^(ωk/3)`; Klee's measure problem:
+such fractions of ω (k-OV under SETH: `≥ n^k  ≤ n^k  (k = 2–6, 8)`; Klee's measure problem:
 `≤ N^(d/2)`; Min-Weight $k$-Clique, whose lower bound does not grow with $k$: `≥ n^3  ≤ n^k  (k = 3–6)`), and otherwise
 only the status at each value (`k = 3: tight · k = 4–6: upper bound`, in the graph `k=3 tight · 4–6 UB`), so that
-$k = 3$'s $n^{\omega}$ does not read as k-Clique's bound. The family also counts when only the presence of a bound
+$k = 3$'s $n^{\omega}$ does not read as k-Clique's bound (k-Clique's exponents ω, 3.250035, 4.085552 and 2ω are no
+such line: it shows `k = 3–6: upper bound`; it showed `≤ n^(ωk/3)` while that knob applied at every $k$, §3.6). The family also counts when only the presence of a bound
 changes (Min-Weight $k$-Cycle without row R465: $n^3$ at every $k$, a lower bound at $k = 3$ only). The
 color stays the primary regime's. A parameter whose values all give the same bounds (edit distance's alphabet sizes)
 keeps the primary regime's line. A regime reads nicely by its parameters (the main one, growth classes such as polylog,
@@ -851,14 +948,17 @@ an unspecified constant and log-dependent parameters do not count; exponents cou
 whole numbers ($m = n^2$, $m = n$, $k = 4$) are tier 0; halves, thirds and quarters up to 3 ($n^{3/2}$, $n^{4/3}$) tier
 1; fifths and sixths up to 4 tier 2; anything else ($n^{10/11}$, $n^{11.5}$) tier 3, which free parameters of reductions
 produce by the dozen. The order (`regimeRankKey`): a conflict, wherever it is (so that a conflict always shows, also
-when another regime is pinned); pinned regimes; tiers 0 and 1 together, then 2, then 3; within them how much the bounds say (tight, a gap, a lower bound,
-an upper bound, none); then the exact tier and the sum over the parameters of (denominator − 1); a simple lower-bound
+when another regime is pinned); pinned regimes; tiers 0 and 1 together, then 2, then 3; within them how much the
+regime's own bounds say (tight, a gap, a lower bound, an upper bound, none), then how much they say with the bounds it
+takes from other regimes (§2.3); then the exact tier and the sum over the parameters of (denominator − 1); a simple lower-bound
 exponent; configured before knob before lower-bound regimes; fewer reductions; the larger lower bound. The exponents of
 bounds do not decide niceness (only break ties), so that moving a hypothesis does not make the regime shown jump.
 Before, the primary regime was the one of the most severe status over all regimes, preferring fewer hops, and that
 status was the problem's: ST-Maximum Flow showed $n^{2.909091}$, tight at $|S| = n^{10/11}$ (one of 129 regimes); it
 now shows $n^2$, tight at one source. On the sheet with the initial settings 10 primary regimes changed, all to nicer
-ones, and 102 problems are tight, 20 have a gap, 45 an upper bound only (before 101, 21, 45).
+ones, and 102 problems are tight, 20 have a gap, 45 an upper bound only (before 101, 21, 45). (Ranking by the bounds
+taken from other regimes first would let a regime that merely inherits a bound displace the nicer one that has it: on
+the sheet it moved many primary regimes to larger ones; the regime's own bounds come first for that reason.)
 
 The inspector **lists** a problem's regimes in that order, by default only (`RegimeSummary.listed`): the first; pinned,
 configured and knob regimes; those of tiers 0–1; and those that the derivation (lower-bound chain or upper-bound tree)
@@ -874,7 +974,9 @@ facts when the LB knobs, constants and relevant settings are unchanged, and the 
 its nodes) when the UB knobs, constants, relevant settings and the regimes the search starts from (§6.6) are
 unchanged; the overlay is new each time. Moving an LB slider, or switching an LB knob, therefore only redoes the
 forward propagation and the new regimes of the overlay (about 0.1–0.4 s on the full sheet); UB or constant changes
-redo both (about 1.1–1.5 s).
+redo both (about 1.1–1.5 s). These times are for the first phase (§6.7); the upper bounds at the other regimes of lower
+bounds follow in the background. The analysis runs on the page's main thread (a Web Worker would keep even the first
+phase off it; not done).
 
 ### 6.9 Cycles that improve a bound (`src/engine/cycles.ts`)
 
@@ -937,14 +1039,20 @@ reductions first), and are computed when the list is opened.
 
 ## 7. User interface (`src/ui`)
 
-* **Header:** the status line (sheet, "built-in sheet" for the embedded one, reductions used, facts, time; in full as
-  a tooltip), the panel toggles, the light/dark toggle (below), then one segment per thing acted on, its name shown once and short verbs after it:
+* **Header:** a "skip to the search field" link for keyboard users (shown on focus); the status line (sheet,
+  "built-in sheet" for the embedded one, reductions used, facts, time, "checking the other regimes…" while the
+  analysis completes in the background, §6.7, and a warning when a search limit was reached; in full as a tooltip;
+  "loading…" until the first analysis is shown), the panel toggles, the light/dark toggle (below), then one segment per thing acted on, its name shown once and short verbs after it:
   **Reductions** (Load… a CSV export of the sheet, Export the edited sheet, ＋ Add a reduction), **Scenario** (Load… /
   Export, JSON), **Config** (Load… / Export, JSON); then **Reset…** (forget the saved state, after a confirmation) and
   **Help**. "Load" replaces; the bounds CSV (left panel) is "imported" because it can also be added to the current
-  knobs. The buttons have accessible names that include the segment ("Load reductions sheet").
+  knobs. The buttons have accessible names that include the segment ("Load reductions sheet"). Scenario and Config
+  Load… refuse a file of the other kind, or JSON without the structure of theirs, before anything changes (loading the
+  config's export as a scenario, or `{}`, used to leave 0 problems and 0 bounds, saved; §3.4), ask before replacing
+  with a file that has problems, and offer Undo.
 * **Left: scenario.** Import… / Export of a bounds CSV (§3.5), in the same segment style as the header. Then **one box
-  per problem** (§3.4; there are no preset buttons, because hypotheses are adjustable reference points rather than
+  per problem of the scenario** (§3.4: the problems listed or with knobs; with the initial settings 208 of the 254
+  problems, none of them dynamic, since knobs cannot hold their bounds; there are no preset buttons, because hypotheses are adjustable reference points rather than
   fixed truths: several fell in 2026). A box's head has a collapse toggle, the problem's name (click: select it,
   Shift-click: add it to the selection; its box is marked while selected), its bounds at the primary regime colored by
   status (a count of the knobs that are on while collapsed), ＋ (a form for a new lower bound or algorithm of that
@@ -954,25 +1062,38 @@ reductions first), and are computed when the list is opened.
   them its regime (an inline field) and note; a knob that is off collapses to a one-line summary and its note. An
   exponent knob of an exponential-time problem (CNF-SAT, MAX-CNF-SAT) has a third line with its **power** $a$ (§2.2):
   a slider (0.05–2) and a number, and the running time rendered, e.g. $= 2^{0.5\,n^{0.75}}$ (other knobs get it only
-  if they have a power other than 1, e.g. from a bounds CSV). ƒ turns an exponent knob into the formula of its time
-  at its regime ($n^{2}$, $2^{0.5\,n^{0.75}}$), and x a formula knob into its exponent and power there (an algorithm
-  for every regime gets its problem's main regime, which an exponent needs). Above
+  if they have a power other than 1, e.g. from a bounds CSV). Two labeled buttons switch a knob's form: **ƒ(n)** turns
+  an exponent knob into the formula of its time at its regime ($n^{2}$, $2^{0.5\,n^{0.75}}$), and **n^c** a formula knob
+  into its exponent and power there (an algorithm for every regime gets its problem's main regime, which an exponent
+  needs); ƒ(n) right after n^c brings the formula back as it was, with its regime, as long as the exponent was not
+  changed in between. (They were glyph buttons "ƒ" and "x" beside the "×" that removes a knob, so one mis-click turned
+  a formula such as U5's $n m + n^2 \log n$ into an exponent for good.) Number fields (exponents, powers, constants,
+  settings) check what is typed: a value out of range or not a number is shown as an error beside the field and not
+  stored (before, it stayed in the field while the state kept the old one), a decimal comma reads as a point ("1,5"
+  became 15 before), and an empty field keeps the old value. The ＋ form likewise checks the regime (every
+  parameter of the problem, each once, with a valid growth) and the formula (it must give a running time at the
+  regime) before it adds a bound. While a formula field has the focus, its rendered preview is drawn over the
+  lines below it, so that nothing moves under the pointer (a click right after focusing a field used to miss). Above
   the boxes, a **bar** that stays at the top of the panel while it scrolls: the totals (or what the search above the
   graph found, with Clear) and Collapse all (Expand all when every box shown is collapsed; during a search both act on
   the boxes shown). The panel has no search field of its own (an earlier version had one, which only repeated the
   toolbar's). Below the boxes, **＋ Problem** (a new empty box
   with its form open, or the existing box shown). The inspector's "add here" opens a box's form prefilled with a regime.
-  Constants (ω) with sliders. Settings. A link opens the initial-settings note. The boxes are rebuilt only when the
-  knobs or boxes change, so typing and dragging never lose focus; switching a knob on or off, new analyses, the
+  Constants (ω) with sliders (and the config's note under each, e.g. which bounds do not follow ω). Settings, a
+  section that stays open, with the panel's scroll position, while settings change (changing a setting used to
+  rebuild the panel, close the section and jump to the top). A link opens the initial-settings note. The boxes are
+  rebuilt only when the knobs or boxes change, so typing and dragging never lose focus; switching a knob on or off, new analyses, the
   selection and the search update them in place (the bar is never rebuilt).
 * **Search** (`src/ui/search.ts`; the text is a preference, empty after a reload): one text, typed in the field above
   the graph; case and spaces around it are ignored. A **problem** is
   found when its name contains the text (family or variation, as in the sheet or as shown: "k-clique" finds
   "$k$-Clique"); a **bound** when its Bound ID is the text (the whole ID: "U1" does not find U12) or its note or
   running-time formula contains it ("Williams", "omega"); a bound found finds its problem too. The graph outlines the
-  problems found; the left panel shows only their boxes, marks the text found in names and notes and highlights the
+  problems found and dims the others (and the reductions that do not join two problems found); the left panel shows
+  only their boxes, marks the text found in names and notes and highlights the
   bounds found (a collapsed box with bounds found is shown open until the search changes or the box is closed; nothing
-  found says so); the problems table lists only the problems found (the reductions table keeps its own filter: the
+  found says so); the problems table lists only the problems found, and its tab says how many ("Problems (12 of 254)";
+  the reductions table keeps its own filter: the
   reduction with that ID, or reductions between problems with that name). When the bounds change during a search (an
   import, a formula edited), the search is applied again: a bound that no longer matches loses its mark (and its box
   goes if nothing else in it is found), and a collapsed box with a bound found only now is shown open. A new search,
@@ -991,26 +1112,34 @@ reductions first), and are computed when the list is opened.
 * **Center: graph** (Cytoscape). Nodes are problems, optionally boxed by family (the *family boxes* toggle, a
   preference, off by default since format 10 of the saved data: with the boxes drawn, a drag that starts inside a box
   moves the box, which made panning hard; problems without a family, and the only problem of a family, stand on their
-  own). Node color = status and label = name +
+  own). Node color = status (a conflict also has a thick double border, so that it does not depend on telling red from
+  green; dynamic problems are drawn dashed in the theme's panel color) and label = name +
   `≥ LB ≤ UB`, both at the primary regime (§6.7; 14 px at 100 % zoom; e.g. `≥ 2^(0.5n^0.75)  ≤ 2^n`), or for a constant
   parameter in the exponent the bounds as functions of it (`≥ n^k  ≤ n^k`) or the status at each value
   (`k=3 tight · 4–6 UB`; §6.7). Edges: solid if
   the row is `ok`, dashed grey otherwise, orange if it produced a listed LB, blue if used by a listed UB, purple if
   both; a row from a problem to itself (from $k$ to $k + 1$, R463–R465) is a small loop above its node, drawn over the
-  other nodes, as the layout leaves little room between them. Search field (above), focus (below), zoom buttons (−, 100 %, +, Fit), re-layout; double-clicking a problem or
-  reduction also shows the inspector.
+  other nodes, as the layout leaves little room between them. Search field (above), focus (below), zoom buttons (−, 100 %, +, Fit; named for screen readers), re-layout; double-clicking a problem or
+  reduction also shows the inspector. A mouse-wheel notch zooms about twice as much as Cytoscape's default (from Fit to
+  100 % took about 39 notches). Cytoscape warns in the console about any custom wheel sensitivity, on every page load,
+  so its warnings are off while the graph's renderer starts, and on again before the style is set (a mistake in the
+  style still shows).
   *Selection* (`src/ui/selection.ts`): a list of problems and reductions. A click selects the item alone; Shift-click
   (or Ctrl/⌘-click) adds it or, if selected, removes it, in the graph, the tables, the inspector's links and the boxes'
   names; a click on the background clears the selection. Selected problems get a teal border and halo, their reductions
   teal edges; a problem item also remembers the regime opened in the inspector.
   *Focus* (`src/ui/focus.ts`; a preference) dims everything except the selection and: **neighbours** (the reductions of
   selected problems and the problems at their other ends; a selected reduction's two problems); **ancestors &
-  descendants** (every problem with a path of drawn reductions to a selected problem or from it, and the reductions on
-  those paths; for a selected reduction, the ancestors of its source and the descendants of its target); or **bound
+  descendants** (every problem with a path of reductions the engine uses to a selected problem or from it, and the
+  reductions on those paths; for a selected reduction, the ancestors of its source and the descendants of its target,
+  or its two problems if the engine does not use it; through the unused, dashed reductions as well, nearly every
+  problem was an ancestor or descendant: the median lineage had 99 problems instead of 38); or **bound
   derivations** (for each selected problem, at the regime opened in the inspector or else the primary one: the problems
   and reductions of its best lower bound's chain, drawn thick in orange, and of its best upper bound's tree, in blue;
   purple where they meet; a bound from a knob on the problem itself marks only the problem; a legend explains the
-  colors). Derivation paths come from the analysis (`boundDerivations` in `src/engine/analysis.ts`).
+  colors). Derivation paths come from the analysis (`boundDerivations` in `src/engine/analysis.ts`). When the focus
+  mode or the selection changes while a focus mode is on, the view zooms to what it keeps (all of it in view, never
+  zoomed in beyond 100 % or the current zoom; `zoomTo` in `src/ui/graph.ts`), instead of centering on the item picked.
   *Hover* (`src/ui/hover.ts`): pointing at a problem or reduction in the graph, or at a reference to it in a panel
   (box names, the inspector's problem names, reduction IDs and Bound IDs (their problems), section titles, table rows;
   also by keyboard focus), highlights
@@ -1037,22 +1166,31 @@ reductions first), and are computed when the list is opened.
 * **Panels** (`src/ui/panels.ts`): the left, right and bottom panels can be resized by dragging the bars between them
   (double-click: default size; arrow keys when focused) and shown or hidden with the buttons at the start of the header
   (the fourth hides all of them, or shows them all again). Default sizes depend on the window (narrower panels on
-  laptops); sizes and visibility are saved with the other preferences. When the graph's container changes size, a view
-  that showed the whole graph ("Fit") is fitted again, otherwise the point at the center stays in place. Below 1100 px
-  the page becomes one scrolling column: graph first, then the panels.
+  laptops); sizes and visibility are saved with the other preferences, and are fitted to the window when it loads or
+  changes size (`fitPanelSizes`: the graph keeps at least about 320 px; saved widths from a larger screen hid the
+  graph and the toolbar for good). The fourth button hides all panels and then shows again the ones that were open.
+  When the graph's container changes size, a view that showed the whole graph ("Fit") is fitted again, otherwise the
+  point at the center stays in place. Below 1100 px the page becomes one scrolling column: graph first, then the
+  inspector, then the left panel (it was the left panel, about 32 000 px tall, before the inspector), and a selection
+  made while the inspector is out of view scrolls it into view.
 * **Right: inspector.**
-  *Nothing selected:* status counts, the edge legend, and an **Initial settings** side note: each group of
-  `initialKnobs` with on/off, its description and (expandable) its knobs, and a **Restore initial settings** button
-  (replaces knobs, constants and engine settings; sheet edits and pinned regimes are kept).
+  *Nothing selected:* status counts (dynamic problems counted apart, not as "no bound"), the edge legend, and an
+  **Initial settings** side note: each group of `initialKnobs` with a switch that shows whether its knobs in the left
+  panel are on, off or partly on and switches them all at once (§3.3), its description and (expandable) its knobs, and a
+  **Restore initial settings** button (replaces knobs, constants and engine settings; sheet edits and pinned regimes are
+  kept).
   *Problem:* signature, the limits of its parameters (§2.3, with their reasons as tooltips), the listed regimes of
   interest (§6.7: in their order, the first marked "in the graph", at most
-  12; "show all" adds the others, faded, and "show fewer" goes back) with LB/UB/status, derivations as numbered lists (LB: the chain back to a
+  12; "show all" adds the others, faded, and "show fewer" goes back) with LB/UB/status (a bound taken from another
+  regime of the problem, §2.3, is marked † and its regime named: "From the regime … , which this one contains"),
+  derivations as numbered lists (LB: the chain back to a
   knob; UB: the bound, then the bounds its calls use, depth first and each once, a row with several calls naming their
   items, e.g. "using 2 and 3"; the limit of a cycle shows the cycle, one lap marked ↻ and the bound it started from;
   the regime opened is the one the "bound derivations" focus draws), under each a collapsed list of what every
   reduction to or from the problem gives there or why it gives nothing (§6.10), "add a lower bound / an algorithm
   here"; the problem's **hypotheses & algorithms** (its box on the left: each knob's Bound ID, kind, value, "off" if
-  switched off, and note; ＋ Lower bound / ＋ Algorithm open the box's form at the main regime); "pin regime" (a pinned
+  switched off, and note; ＋ Lower bound / ＋ Algorithm open the box's form at the main regime); "pin regime" (an
+  empty spec, one that is not a regime of the problem and one already pinned are refused with a message; a pinned
   spec that the limits clip shows the regime it stands for, "→ n=1, m=2"; a knob's regime likewise, under the knob: "at
   the limits of its parameters: …").
   *Bound IDs* (in that list, in derivations that end at a knob, and in the initial-settings note) are links: a click
@@ -1062,26 +1200,35 @@ reductions first), and are computed when the list is opened.
   *Several items:* a head with their number, expand all / collapse all / clear, then one collapsible section per item
   (title: name, status and bounds, or the reduction's ends; × removes it from the selection), in the order selected.
   *Reduction:* all sheet fields rendered with KaTeX (MathML output, no fonts needed), parsed formula, status and
-  messages, free parameters and abbreviations, the LB facts it produced, a probe of the produced instances (target
+  messages ("lower bounds only" for a row marked `lowerOnly`, §3.3), free parameters and abbreviations, the LB facts it produced, a probe of the produced instances (target
   regime and scale of each call, RT as a time) at a chosen source regime, "disable in scenario", and an editor (modal) for
   the From/To problems, the To-time / From-time / RT / Restrictions / Randomized / Hypothesis cells and the row's config
   annotation as JSON (live parse checks; the header's Reductions "＋ Add" uses the same form). The problems are written
   `Family / Variation`, or the variation alone for a problem without a family (refused when it is only the variation of
   a problem with a family, which then has to be written in full); their cells are rewritten only when the name changed
   (names are shown with whitespace squashed, and some sheet cells break a family name over two lines).
-* **Bottom tabs:** problems table (sortable, filtered by the search: the problems found by name or through their
-  bounds), reductions table (status and first message of
+* **Bottom tabs:** problems table (sortable, the Bounds column by lower bound, then upper bound; filtered by the
+  search: the problems found by name or through their bounds), reductions table (status, an "LB only" badge for rows
+  marked `lowerOnly`, and first message of
   every row, filter for unused rows), diagnostics (the size of the analysis, knob problems, cycles that improve a bound
   and their limits, inconsistencies (one line per reduction, source and message, with the number of regimes), caps
   hit, CSV warnings, model diagnostics such as signature disagreements). Selected rows are highlighted; clicks select
   as in the graph.
 
+* **Accessibility:** a skip link to the search field; the icon buttons (remove "×", collapse "▾", zoom "−"/"+") have
+  names for screen readers, not only titles; the Help dialog is modal (`aria-modal`, the focus stays in it and goes
+  back to the Help button when it closes, Esc closes it); conflicts have a double border in the graph, not only a color.
+  Not done: table rows and sortable headers cannot take the focus.
+
 State is kept in one immutable `AppState` (`src/ui/state.ts`); every change goes through `Store.update(fn)`
 (`src/ui/store.ts`), which compares the old and new state: a new sheet or config rebuilds the model and the analysis
 synchronously (views never see a mismatched pair); a new scenario or pinned regime schedules the analysis (debounced
 while a slider moves, with a busy indicator); views subscribe to the kinds of change they display. The scenario, pinned
-regimes and preferences, and the sheet/config when customized, are saved in `localStorage` (failures are ignored),
-together with a format number (now 12). Data saved by the first version (no format number) keeps its sheet and config
+regimes and preferences, and the sheet/config when customized, are saved in `localStorage`, together with a format
+number (now 13). A save that fails (the browser's quota, about 5 million characters) is reported once. When another
+tab or window of the app saves (a `storage` event), this one stops saving and shows a banner that offers to reload with
+the newest data: before, two open tabs overwrote each other's work without a word (an edit of row R2 in one tab was lost
+when a knob was switched in the other). Data saved by the first version (no format number) keeps its sheet and config
 edits, with the config's `presets` replaced by the current `initialKnobs`, but its knobs are replaced by the new initial
 scenario (a message says so). Format 2, written before Bound IDs were numbers, named the initial knobs
 `<group>/<variation>` (e.g. `seth/cnf-sat`) and knobs added in the app `k…`: such a knob gets the Bound ID of the
@@ -1129,7 +1276,14 @@ label that has one of the built-in group's knobs (the same Bound ID for the same
 name keeps it) gets the new label, and the new description if it has the old one; a saved knob of that group whose note
 is the old label (the default note) gets its new default note (the built-in knob's note, or the label in a custom
 config); format 2's knob names (`seth/cnf-sat`) are read with the labels of then. Upgraded data is
-saved in the current format right away.
+saved in the current format right away. Format 13 (the review of November 2026) adds the groups of SETH in its
+$k$-SAT form, the low-dimension OV and (min,+)-convolution hypotheses and the October 2026 $k$-SAT algorithm (off), the
+config entries of $k$-SAT, Low-Dimension OV, R169–R170, R467, R469–R470 and the limit $n \le N$ of four problems on
+compressed texts (`ENTRIES_ADDED_IN`); it changes the entries of CNF-SAT, R106, R256, R344 and R350 where a custom
+config still has the old built-in ones (`ENTRIES_CHANGED_IN`), the built-in knobs U14, U273, U288, U304, U307, U359 and
+U417 (`KNOBS_CHANGED_IN`: a saved knob that is still the old built-in bound becomes the new one, keeping its switch and
+a note of the user's own; a custom config's copy likewise; one message lists them) and the default of ω
+(`CONSTANTS_CHANGED_IN`: a custom config with the old 2.371552 gets 2.371339).
 
 ---
 
@@ -1404,7 +1558,7 @@ Unit tests (mocha + tsx) partition each module's input space:
   a bare number, other text); the occurrences marked (several, overlapping, case).
 * **theme**: dark or not and the toggle for each theme × system setting (every toggle changes the look; agreeing with
   the system means following it); saved themes restored, invalid ones replaced by `system`.
-* **e2e** (Playwright, optional): the built HTML loads without console errors and without any network request, renders
+* **e2e** (Playwright, optional): the built HTML loads without console errors or warnings and without any network request, renders
   all problems with their default bounds and the initial-settings note (with switched-off knobs as compact rows), the
   bounds of a constant parameter in the exponent as functions of it or as statuses, the rows from $k$ to $k + 1$ as
   loops above their nodes (drawn over the other nodes), no
@@ -1425,6 +1579,42 @@ Unit tests (mocha + tsx) partition each module's input space:
   reads "Expand all"), a Bound ID in the inspector's list for a problem near the end of the panel, and one in a
   derivation (GeomBase's lower bound from L2), each open their box and scroll the bound into view. Triangle Listing's
   inspector lists its four limits, and pinning `n=1, m=1.5, alpha=1, t=4` shows "→ n=1, m=1.5, alpha=0.75, t=2.25".
+
+**Added with the review of November 2026** (one test or more per item of the review, each failing before its fix):
+
+* **regime / engine:** `Regime.contains` (per class and exponent; constants with values only below `c?` and growing
+  classes, never each other; log-dependent `C` < `L` < `P`; another normalizer or scale: no); lower bounds lifted into
+  the regimes that contain theirs (not into contained ones) and upper bounds pushed down, where they can conflict, a
+  regime's own better bound kept, and the reductions of a carried bound counted as used; incomplete analyses (upper
+  bounds first at `MAX_UB_REGIMES_FIRST` regimes of lower bounds, then completion in slices: time up at once, after
+  one regime, never; the result equals a complete analysis); the refinement's first step from the grid actually made
+  (fewer values per parameter when capped: the best point between two values found at 9 to 41 points); knob formulas
+  that give no running time or overflow reported, not dropped (W8); `\log n (n+m)` read as $\log n \cdot (n + m)$
+  (W7, parser); a row marked `lowerOnly` carries lower bounds only, and its explanation says why; tiny free-parameter
+  values shown by their size; calls on degenerate instances (a parameter beyond $N^{10^4}$) not evaluated; the ranking
+  by a regime's own status first.
+* **integration:** k-Clique at each $k$ ($\omega$, 3.250035, 4.085552, $2\omega$: U14 only where 3 divides $k$); SETH
+  in its $k$-SAT form gives Subset Sum, Bicriteria s,t-Path (tight with Joksch at $L = C = n$ and $n^3$), the low-dimension
+  OV problems and approximate attention, and the CNF form gives none of them; R106 gives Triangle Listing no upper
+  bound (a gap $[n^2, n^{2.2034}]$ at $m = n^{1.5}$); BC gets no APSP algorithm (R169, R170 skipped); the 2026
+  algorithms refute the Zero-Weight and Min-Weight $k$-Clique hypotheses at every $k = 3, \dots, 6$ (R458/R371 folding at
+  $k = 3, 6$; R469/R470 one instance per vertex at $k = 4, 5$: $n$ times the bound at $k - 1$); the (min,+)-convolution
+  hypothesis makes the knapsack-type problems tight and conflicts with the 2026 algorithms; no two trivial rows for one
+  pair of problems, except a problem's rows to itself with different formulas (R463 and R469).
+* **model / state / CSV:** `lowerOnly` validated; knob IDs that are not whole numbers or have the wrong letter
+  replaced; one bad `disabledRows` entry dropped, not the list; scenario constants unknown or out of range dropped
+  (`checkScenarioConstants`); a constant's note kept; format 13's migrations (groups and entries added, knobs and
+  entries changed where still built-in, ω's old default, each reported once); bounds CSV headers in any case, a Bound
+  ID of the wrong letter given a new one, a row with an open quote not read; `fitPanelSizes` (saved sizes from a larger
+  window keep the graph visible).
+* **e2e:** the config's export loaded as a scenario, and the scenario's as a config, are refused and change nothing;
+  a group switch turns its group's knobs off and on again; a settings change keeps the section open and the panel's
+  scroll position, and a value out of range is refused with a message while the field shows the current value; ω reads
+  "2,5" as 2.5 and refuses 1.5; n^c and ƒ(n) give U5 its formula back; the Help dialog keeps the focus and gives it
+  back; a narrow window puts the inspector after the graph, and a saved panel size too large for the window leaves the
+  graph its room; a `storage` event from another tab shows the banner; the view zooms to what a focus mode keeps (every
+  undimmed problem in view). Not covered by tests: the ＋ form's regime and formula checks, and pins in exported
+  scenarios (checked by hand).
 
 ---
 
@@ -1454,12 +1644,15 @@ $\max(x_u, x_q)$ (one-dimensional bisection, as in §6.5). Dynamic *sources* wou
   ($2^{O(\sqrt{n})}$ to $2^{o(n)}$, $N^{\log\log N}$ to none). A lower bound with an unknown constant, such as ETH's
   $2^{\delta n}$ for some $\delta > 0$, needs a value for the constant.
 * Regime classes are coarse (§2.6). Results for sub-polynomial parameters (e.g. $d = c\log n$ for a specific $c$) are
-  not distinguished.
+  not distinguished; where a reduction needs logarithmic rather than polylogarithmic dimension, the sheet names the
+  problem apart (Low-Dimension OV, rows R350, R467, R468), and `requires: "d=log"` (R351) only documents the need.
+* Bounds carry between a problem's own regimes only when one regime contains the other at the same scale (§2.3), not
+  through rescaled embeddings (a regime's instances read in another regime at another size).
 * Grid search with refinement may miss the exact optimum of continuous free parameters (by about $10^{-7}$ with the
   default settings, more with fewer grid points or rounds, or when the objective has several separated maxima). Such
   misses only weaken bounds (§6.3); differences below $10^{-4}$ are reported as tight.
-* Upper-bound derivations pass through at most `maxDepthUB` (default 3) regimes in a row that are not of interest
-  (§6.6); pin a regime to make it one. Lower-bound derivations have no limit except the caps (20 000 steps, 1000
+* Upper-bound derivations pass through at most `maxDepthUB` (default 3, at most 5) regimes in a row that are not of
+  interest (§6.6); pin a regime to make it one. Lower-bound derivations have no limit except the caps (20 000 steps, 1000
   regimes per problem).
 * Cycles through `\min` of calls are repeated lap by lap (200 laps per limit), so their limits may be approached only;
   cycles that move to another regime on every lap are followed step by step within the caps. A lower bound is taken to
@@ -1467,14 +1660,22 @@ $\max(x_u, x_q)$ (one-dimensional bisection, as in §6.5). Dynamic *sources* wou
 * Rows whose formulas are prose, `??`, or use symbols that are not declared are skipped (listed in the Reductions tab).
 * `O(x)` is read as $\Theta(x)$ except for constants and logarithmic coefficients (§4.2); a formula that divides by an
   $O(\cdot)$ bound would be read optimistically (none in the sheet does).
-* The analysis runs on the page's main thread: changes that recompute upper bounds freeze the page for about a second.
-* With ~210 problems the whole graph cannot be read at once in a small panel: at "Fit", labels are about 4 px tall with
-  the default panels on a 1600 × 1000 window and about 7 px with the graph alone; zoom in (100 % = 14 px) to read.
+* The analysis runs on the page's main thread (no Web Worker): changes that recompute upper bounds freeze the page for
+  about a second (its first phase, §6.7; the rest follows in short slices).
+* With ~250 problems the whole graph cannot be read at once in a small panel: at "Fit", labels are about 3–4 px tall
+  with the default panels on a 1600 × 1000 window and about 7 px with the graph alone; zoom in (100 % = 14 px) to read,
+  or use a focus mode, which zooms to what it keeps. Some labels overflow their boxes (Cytoscape wraps at the
+  non-breaking spaces of the bounds line), and a family box dragged onto others keeps the overlap until Re-layout,
+  which arranges everything anew.
 * The sheet's prose restrictions (e.g. "only for $m = \Theta(n^{3/2})$") are not read; such conditions must be added as
-  `requires` annotations (row R106 has one).
+  `requires` annotations (row R106 has one), and a row that holds only on special instances as `lowerOnly` (§3.3: R106;
+  other rows may need it).
 * The engine does not know which algorithms are combinatorial: an upper bound from fast matrix multiplication passes
   backward through reductions from the `Combinatorial …` problems as from any other, although their hypotheses only
-  concern combinatorial algorithms (hence the switched-off `Non-combinatorial algorithms` group, §3.6).
+  concern combinatorial algorithms (hence the switched-off `Non-combinatorial algorithms` group, §3.6). So by default
+  CFG Parsing and Transitive Closure show $n^3$ while other ω-based algorithms (Triangle Detection, RNA Folding) are on;
+  switching the group on fixes that but makes the combinatorial BMM hypothesis, when switched on, conflict at CFG
+  Parsing, Transitive Closure and back at Combinatorial BMM. A clean fix needs combinatorial versions of those problems.
   For the same reason the sheet has no row from Transitive Closure to Directed, Unweighted APSP (reachability is
   finiteness of distances): it would carry Zwick's $n^{2.53}$ (on by default) to Combinatorial BMM through R356.
 * The engine does not know the machine model either: the rows from integer (or unweighted) problems to real-valued
@@ -1504,10 +1705,18 @@ $\max(x_u, x_q)$ (one-dimensional bisection, as in §6.5). Dynamic *sources* wou
   only; the config restricts it to that value (`requires`), at the owner's request. Without the 3SUM-hard case $k = 3$,
   the narrowest colour-spanning strip gets its 3SUM lower bound from GeomBase directly, through R39, whose ?? were filled
   in November 2026 with the natural reduction (Abellanas et al. omit their proof). #Exact Triangle → Exact Triangle
-  (R457) has no formula (no explicit exponent). 3-SAT is not a problem of the sheet: the October 2026 $2^{o(n)}$
-  algorithm for $k$-SAT is not a polynomial exponent, so the engine could not hold it, and the fine-grained reductions
-  from 3-SAT are those from CNF-SAT restricted to width 3; the CNF-SAT hypothesis keeps its knob as the Satisfiability
-  Hypothesis.
+  (R457) has no formula (no explicit exponent).
+* $k$-SAT and CNF-SAT are separate problems since November 2026. A lower bound for CNF-SAT says nothing about its
+  special case $k$-SAT, so the reductions that need a $k$-CNF formula with $O(n)$ clauses (sparsification: R214–R219,
+  R231, R248–R250, R256, R344, and R467 to Low-Dimension OV) start from $k$-SAT, which reduces to CNF-SAT (R466); SETH
+  in its $k$-SAT form (L16) implies the CNF form (L1), not conversely. Earlier versions let those rows start from
+  CNF-SAT, so the Satisfiability Hypothesis (the CNF form, with $\text{poly}(n)$ clauses) gave Subset Sum, 0-1
+  Knapsack, Bicriteria s,t-Path, Approximate Bichromatic Hamming Close Pair and Approximate Attention lower bounds it
+  does not imply (and an earlier version of this section argued that reductions from 3-SAT are those from CNF-SAT
+  restricted to width 3, which runs the wrong way for lower bounds; found by an independent review). The October 2026
+  $2^{o(n)}$ algorithm for $k$-SAT (U442, off) is a rate of exponent 0 that the engine holds ($2^{o(n)}$); it refutes the
+  $k$-SAT form and reaches no other problem, since every row from $k$-SAT points away from it. 3-SAT itself is not a
+  problem of the sheet.
 * The rows from $k$ to $k + 1$ (R463–R465: Min-Weight and Zero-Weight $k$-Clique, a new vertex; directed Min-Weight
   $k$-Cycle, colour coding) carry the cubic lower bounds of $k = 3$ (Minimum Weight Triangle, Exact Triangle) to the
   larger $k$. The config restricts them to $k = 3, 4, 5$, so that they reach the listed $k \le 6$: unrestricted, every
@@ -1515,6 +1724,15 @@ $\max(x_u, x_q)$ (one-dimensional bisection, as in §6.5). Dynamic *sources* wou
   cliques are hypotheses of their own (L6, L7, L15), off by default. Row R118 needs an even clique size and is
   restricted to even $k$, which the bounds carried to $k = 5$ made visible (2.5 strings). Under the $k$-AP hypothesis
   alone, 3-uniform $k$-hyperclique has a lower bound at $k = 4$ only (R434): a row from $k$ to $k + 1$ would carry $n^4$
-  to $k = 5, 6$ but not to the listed 9, 12, 30 and 300, so the sheet has none.
+  to $k = 5, 6$ but not to the listed 9, 12, 30 and 300, so the sheet has none. Rows R469 and R470 go the other way
+  for the weighted cliques ($k$ from $n$ instances of $k - 1$ on neighbourhoods), restricted to $k = 4, 5, 6$; they carry
+  the 2026 algorithms to $k = 4, 5$ at a factor $n$, so the app shows the Min-Weight and Zero-Weight $k$-Clique
+  hypotheses refuted at every listed $k$.
+* The $k$-Clique-type hypotheses (L6, L7, L8, L15) list $k = 3, \dots, 6$ only. Reductions whose instances grow like
+  $n^{k/3 + O(1)}$ approach the bounds of the literature only as $k$ grows: under the $k$-Clique hypothesis CFG Parsing
+  gets $n^{1.581}$ here (R328's own note says $k \le 6$ caps it at $2\omega/3$), $n^{\omega - o(1)}$ in the
+  literature (Abboud, Backurs, Vassilevska Williams 2015). Lists up to $k = 300$, as L13 has, were tried in November 2026:
+  the bounds improve ($n^{2.348}$ for CFG Parsing), but regimes at large $k$ (e.g. $k = 300$ with $d = 200$) became the
+  primary ones of several problems, which the ranking of §6.7 would have to handle first; so the lists were kept.
 * The built-in algorithms (§3.6) come from a quick pass over the literature (about 30 seconds per problem): notes mark
   the randomized ones and those of medium confidence, and a few problems have only a trivial algorithm.
